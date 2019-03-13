@@ -23,8 +23,7 @@ class Coin:
 # A CoinSet is a list of coins that all have the same fairness
 class CoinSet:
 	def __init__(self, head_odds=0.5, n=10):
-		for x in range(n):
-			self.coins = [ Coin(head_odds) for x in range(n) ]
+		self.coins = [ Coin(head_odds) for x in range(n) ]
 
 # trial flips all the coins in the coinset and returns the number of heads and tails
 # see the binomial theorem at work
