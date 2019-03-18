@@ -1,11 +1,14 @@
 # © Copyright 2019 Lawrence E. Bakst All Rights Reserved
-# The code here generates MS compatible Freecell deals and generates moves for them
+# The code here generates MS compatible Freecell deals, makes moves, generates moves
+# and evaluates them.
 
 import random
+import ansi
 
-# cards are numbered 1-52, so zero is an error
-# cards are in suit order so 1-13 are Ace of Hearts thru King of Hearts
-# if a card is negative it's facedown, not used for Freecell but needed for Klondike
+# cards are numbered 1-52, so zero is an error.
+# My preferece would be that cards are in suit order so 1-13 are Ace of Hearts thru King of Hearts.
+# However MS uses card order so I decided to go with that to avoid a mapping layer.
+# if a card is negative it's facedown, not used for Freecell but needed for Klondike.
 
 CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
 #RankNames = ["Heart", "Diamond", "Spade", "Club"]
@@ -13,6 +16,7 @@ CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
 MSRankNames = ["C", "D", "H", "S"]
 MSRankGlyphs = ["♣", "♦", "♥", "♠"]
 #Colors = ["Red", "Red", "Black", "Black"]
+rankmap = [1, 2, 0, 3]
 max = 52
 
 # Create a deck of cards
@@ -42,40 +46,9 @@ def MSCardName(card):
 	val = card // 4
 	return CardNames[val] + MSRankGlyphs[suit]
 
-reset='\033[0m'
-bold='\033[01m'
-disable='\033[02m'
-underline='\033[04m'
-reverse='\033[07m'
-strikethrough='\033[09m'
-invisible='\033[08m'
-class fg: 
-	black='\033[30m'
-	red='\033[31m'
-	green='\033[32m'
-	orange='\033[33m'
-	blue='\033[34m'
-	purple='\033[35m'
-	cyan='\033[36m'
-	lightgrey='\033[37m'
-	darkgrey='\033[90m'
-	lightred='\033[91m'
-	lightgreen='\033[92m'
-	yellow='\033[93m'
-	lightblue='\033[94m'
-	pink='\033[95m'
-	lightcyan='\033[96m'
-class bg: 
-	black='\033[40m'
-	red='\033[41m'
-	green='\033[42m'
-	orange='\033[43m'
-	blue='\033[44m'
-	purple='\033[45m'
-	cyan='\033[46m'
-	lightgrey='\033[47m'
 
 # MS suit ordering is club, diamond, heart, spade
+# I don't think they knew that suits have an order
 def convertToMS(card):
 	card -= 1
 	offset = [39, 13, 0, 26]
@@ -85,10 +58,10 @@ def convertToMS(card):
 
 def CardColor(card):
 	if MSRedCard(card):
-		print(fg.red, end='')
+		print(ansi.fg.red, end='')
 	else:
-		print(fg.black, end='')
-
+		print(ansi.fg.black, end='')
+# Returns a tuple(colum, index, home) that describes the from or to of a move
 def GetCIH(l):
 	col = -1
 	idx = -1
@@ -102,13 +75,13 @@ def GetCIH(l):
 		home = True
 	return (col, idx, home)
 
+# Suposedly MS compiler runtime compatible version of rand
+# first 5 numbers with seed of 1 are 41, 18467, 6334, 26500, 19169
 state = 1
 def srand(seed):
 	global state
 	state = seed
 
-# Suposedly MS compiler runtime compatible version of rand
-# first 5 numbers with seed of 1 are 41, 18467, 6334, 26500, 19169
 def rand():
 	global state
 	state = ((214013 * state) + 2531011) % 2147483648 # mod 2^31
@@ -118,15 +91,13 @@ def rand():
 # google biased shuffle
 # https://blog.codinghorror.com/the-danger-of-naivete/
 # https://stackoverflow.com/questions/859253/why-does-this-simple-shuffle-algorithm-produce-biased-results-what-is-a-simple
-
+# not really used as the ms compatible code does it a different way
 def Shuffle(deck):
 	for i in range(len(deck) - 1, 0, -1):
 		card = random.randint(0, i)
 		deck[i], deck[card] = deck[card], deck[i]
 
-def MoveCard(frm, to):
-	to.push(frm.pop)
-
+# code to implement a FreeCellGame
 class FreeCellGame:
 	def __init__(self):
 		self.cols = 9
@@ -134,7 +105,7 @@ class FreeCellGame:
 		self.freecells = 4
 		self.freetabs = 0
 
-# Generate a Freecell game, game 5 is easy so it's the default
+# Generate a new Freecell game and set up the board, game 5 is easy so it's the default
 	def NewGame(self, game=5):
 		self.Board = [[-1 for j in range(self.rows)] for i in range(self.cols)]
 		self.Board[0] = [[] for i in range(8)]
@@ -161,7 +132,7 @@ class FreeCellGame:
 				else:
 					break
 
-# print the board in the standard way
+	# print the board in the standard way
 	def PrintBoard(self):
 		for i in range(8):
 			if len(self.Board[0][i]) > 0:
@@ -186,9 +157,11 @@ class FreeCellGame:
 			if pcnt == 0:
 				break
 			pcnt = 0
-# print the board using color and glyphs
+
+	# print the board using color and glyphs
 	def PrintFancyBoard(self):
-		print(bg.green, end='')
+		# the top row of freecells and foundations piles is stored in column 0
+		print(ansi.bg.green, end='')
 		for i in range(8):
 			if len(self.Board[0][i]) > 0:
 				card = self.Board[0][i][-1]
@@ -196,13 +169,14 @@ class FreeCellGame:
 				print(MSCardName(card) + " ", end='')
 			else:
 				print("   ", end='')
-		print(bg.black, end='')
+		print(ansi.bg.black, end='')
 		print()
 
+		# print the tableau
 		j  = 0
 		pcnt = 0
 		while True:
-			print(bg.green, end='')
+			print(ansi.bg.green, end='')
 			for i in range(1, self.cols):
 				if j < len(self.Board[i]):
 					card = self.Board[i][j]
@@ -212,21 +186,22 @@ class FreeCellGame:
 					pcnt += 1
 				else:
 					print("   ", end='')
-			print(bg.black, end='')
+			print(ansi.bg.black, end='')
 			print()
 			j += 1
 			if pcnt == 0:
 				break
 			pcnt = 0
 		print()
-		print(reset, end='')
+		print(ansi.reset, end='')
 
-# moves a single card
+	# move a single card, no auto, no compund, no super moves
+	# the move is in "standard notation"
+	# NB doesn't yet check validity of the move
 	def move(self, m):
-		rankmap = [1, 2, 0, 3]
 		fcih = GetCIH(m[0])
 		tcih = GetCIH(m[1])
-		if tcih[2]: # special case to home
+		if tcih[2]: # special case, move a card to it's foundation home
 			card = self.Board[fcih[0]][-1]
 			v, r, c = value(card), rank(card), color(card)
 			card = self.Board[fcih[0]].pop()
@@ -234,6 +209,7 @@ class FreeCellGame:
 		else:
 			print(fcih)
 			print(tcih)
+			#get from card
 			if fcih[1] > -1:
 				card = self.Board[0][fcih[1]].pop()
 				self.freecells += 1
@@ -241,6 +217,7 @@ class FreeCellGame:
 				card = self.Board[fcih[0]].pop()
 				if len(self.Board[fcih[0]]) == 0:
 					self.freetabs += 1
+			# put card in new location
 			if tcih[1] > -1:
 				self.Board[0][tcih[1]].append(card)
 				self.freecells -= 1
@@ -248,6 +225,24 @@ class FreeCellGame:
 				if len(self.Board[tcih[0]]) == 0:
 					self.freetabs -= 1
 				self.Board[tcih[0]].append(card)
+	# automatically move cards and the bottom of the tableau to the foundations
+	def autoMoves(self):
+		for i in range(1, self.cols):
+			if len(self.Board[i]) < 1:
+				continue # skip empty columns
+			card = self.Board[i][-1]
+			r, v = rankmap[rank(card)], value(card)
+			#print(i, r, v)
+			if len(self.Board[0][r]) < 1 and v != 0:
+				continue
+			if v == 0 or (len(self.Board[0][r]) > 0 and value(self.Board[0][r][-1]) + 1 == v):
+				print("auto move ", i, "h", )
+				self.Board[0][r].append(card)
+				self.Board[i].pop()
+
+
+
+
 
 # test board 5
 def test1():
@@ -296,35 +291,5 @@ def test4():
 	a.move("6d")
 	a.move("5b")
 	a.PrintFancyBoard()
-
-
-
-
-#https://freecellgamesolutions.com/notation.html
-#Standard Move Notation
-#An example of understanding the solution in standard notation (for game 10913)
-#
-##10913 
-#26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 41 45 34 3c 6d 5b 
-#
-#a, b, c, d - free cells, 
-#1, 2 .. 8 - columns, 
-#h - home cell 
-#
-#1st move: 26 : move the cards from the 2nd column to the 6th column. 
-#5th move = 5a : move a card from the 5th column to the 1st free cell. 
-#12th move = 4h : move a card from the 4th column to the home cell. 
-#
-#All moves to empty columns are column moves rather than single card moves. 
-#
-#P.S. Many other sites are also using this most popular notation.
-#SuperMove
-#
-#Starting from the Vista version of Windows the standard MS FreeCell program uses "SuperMove" for moving more cards to
-#empty column at once. Because of "SuperMove" approximately 4% of the solutions on this site have two versions: one version
-#with "SuperMove" (for Windows Vista/7/8) and the second version without "SuperMove" (for Windows XP and older versions).
-
-# columns 1-8, freecells a-d, h for home foundation
-#a move consists of a list or tuple of 3 items, (from, to, count)
 
 
