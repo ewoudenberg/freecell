@@ -239,11 +239,16 @@ class FreeCellGame:
 				print("auto move ", i, "h", )
 				self.Board[0][r].append(card)
 				self.Board[i].pop()
+	#play moves
+	def play(self, moves):
+		for m in moves:
+			self.autoMoves()
+			self.move(m)
+			self.PrintFancyBoard()
+			toss = input()
 
-
-
-
-
+smoves = ["26"]
+moves = ["26", "76", "72", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 # test board 5
 def test1():
 	a = FreeCellGame()

@@ -1,0 +1,26 @@
+#https://freecellgamesolutions.com/notation.html
+#Standard Move Notation
+#An example of understanding the solution in standard notation (for game 10913)
+#
+##10913 
+#26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 41 45 34 3c 6d 5b 
+#
+#a, b, c, d - free cells, 
+#1, 2 .. 8 - columns, 
+#h - home cell 
+#
+#1st move: 26 : move the cards from the 2nd column to the 6th column. 
+#5th move = 5a : move a card from the 5th column to the 1st free cell. 
+#12th move = 4h : move a card from the 4th column to the home cell. 
+#
+#All moves to empty columns are column moves rather than single card moves. 
+#
+#P.S. Many other sites are also using this most popular notation.
+#SuperMove
+#
+#Starting from the Vista version of Windows the standard MS FreeCell program uses "SuperMove" for moving more cards to
+#empty column at once. Because of "SuperMove" approximately 4% of the solutions on this site have two versions: one version
+#with "SuperMove" (for Windows Vista/7/8) and the second version without "SuperMove" (for Windows XP and older versions).
+
+# columns 1-8, freecells a-d, h for home foundation
+#a move consists of a list or tuple of 3 items, (from, to, count)
