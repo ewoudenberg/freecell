@@ -29,8 +29,13 @@ def CardName(card):
 	#print((card - 1) // 13)
 	return CardNames[(card - 1) % 13] + ShortRankNames[(card-1) // 13]
 
-def RedCard(card):
-	return card <= 26
+def MSRedCard(card):
+	card -= 1
+	suit = card % 4
+	if suit == 1 or suit == 2:
+		return True
+	return False
+
 
 def MSCardName(card):
 	card -= 1
@@ -157,7 +162,7 @@ class FreeCellGame:
 				print(bg.green, end='')
 				#print(self.Board[i])
 				card = self.Board[i][j]
-				if RedCard(card):
+				if MSRedCard(card):
 					print(fg.red, end='')
 				else:
 					print(fg.black, end='')
@@ -165,21 +170,58 @@ class FreeCellGame:
 				print(bg.black, end='')
 			print()
 		# print the last row of 4 cards
+		print(bg.green, end='')		
 		for i in range(1, 5):
-			print(bg.green, end='')
 			card = self.Board[i][6]
-			if RedCard(card):
+			if MSRedCard(card):
 				print(fg.red, end='')
 			else:
 				print(fg.black, end='')
-			print(MSCardName(card-1) + " ", end='')
-			print(bg.black, end='')
+			print(MSCardName(card) + " ", end='')
+		print("            ", end='')
+		print(bg.black, end='')
 		print()
 		print(reset, end='')
+
+	def MtoC(s):
+		return(int(s)-40)
+	def move(m):
+		f = m[0]
+		t = m[1]
+
 
 # test board 5
 def test():
 	a = FreeCellGame()
 	a.NewGame(5)
 	a.PrintFancyBoard()
+
+#https://freecellgamesolutions.com/notation.html
+#Standard Move Notation
+#An example of understanding the solution in standard notation (for game 10913)
+#
+##10913 
+#26 76 72 72 5a 27 57 67 1b 61 
+#41 4h 4h 41 45 34 3c 6d 5b 
+#
+#a, b, c, d - free cells, 
+#1, 2 .. 8 - columns, 
+#h - home cell 
+#
+#1st move: 26 : move the cards from the 2nd column to the 6th column. 
+#5th move = 5a : move a card from the 5th column to the 1st free cell. 
+#12th move = 4h : move a card from the 4th column to the home cell. 
+#
+#All moves to empty columns are column moves rather than single card moves. 
+#
+#P.S. Many other sites are also using this most popular notation.
+#SuperMove
+#
+#Starting from the Vista version of Windows the standard MS FreeCell program uses "SuperMove" for moving more cards to
+#empty column at once. Because of "SuperMove" approximately 4% of the solutions on this site have two versions: one version
+#with "SuperMove" (for Windows Vista/7/8) and the second version without "SuperMove" (for Windows XP and older versions).
+
+# columns 1-8, freecells a-d, h for home foundation
+#a move consists of a list or tuple of 3 items, (from, to, count)
+
 
