@@ -8,26 +8,26 @@ import random
 # if a card is negative it's facedown, not used for Freecell but needed for Klondike
 
 CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
-RankNames = ["Heart", "Diamond", "Spade", "Club"]
-ShortRankNames = ["H", "D", "S", "C"]
+#RankNames = ["Heart", "Diamond", "Spade", "Club"]
+#ShortRankNames = ["H", "D", "S", "C"]
 MSRankNames = ["C", "D", "H", "S"]
 MSRankGlyphs = ["♣", "♦", "♥", "♠"]
-Colors = ["Red", "Red", "Black", "Black"]
+#Colors = ["Red", "Red", "Black", "Black"]
 max = 52
 
 # Create a deck of cards
 def NewDeck(n=max):
 	return [x for x in range(1, n+1)]
 
-def FullCardName(card):
-	#print((card - 1) % 13)
-	#print((card - 1) // 13)
-	return CardNames[(card - 1) % 13] + " of " + RankNames[(card-1) // 13] + "s"
+def value(card):
+	return (card - 1) // 4
 
-def CardName(card):
-	#print((card - 1) % 13)
-	#print((card - 1) // 13)
-	return CardNames[(card - 1) % 13] + ShortRankNames[(card-1) // 13]
+def rank(card):
+	return (card - 1) % 4
+
+# true if red
+def color(card):
+	return rank(card) == 1 or rank(card) == 2
 
 def MSRedCard(card):
 	card -= 1
@@ -35,7 +35,6 @@ def MSRedCard(card):
 	if suit == 1 or suit == 2:
 		return True
 	return False
-
 
 def MSCardName(card):
 	card -= 1
@@ -84,6 +83,25 @@ def convertToMS(card):
 	val = card // 4
 	return offset[suit] + val + 1
 
+def CardColor(card):
+	if MSRedCard(card):
+		print(fg.red, end='')
+	else:
+		print(fg.black, end='')
+
+def GetCIH(l):
+	col = -1
+	idx = -1
+	home = False
+	if l >= "1" and l <= "8":
+		col = int(l)
+	elif l >= "a" and l <= "d":
+		col = 0
+		idx = ord(l) - 97 + 4
+	elif l == "h":
+		home = True
+	return (col, idx, home)
+
 state = 1
 def srand(seed):
 	global state
@@ -113,10 +131,14 @@ class FreeCellGame:
 	def __init__(self):
 		self.cols = 9
 		self.rows = 21
-		self.Board = [[-1 for j in range(self.rows)] for i in range(self.cols)]
+		self.freecells = 4
+		self.freetabs = 0
 
 # Generate a Freecell game, game 5 is easy so it's the default
 	def NewGame(self, game=5):
+		self.Board = [[-1 for j in range(self.rows)] for i in range(self.cols)]
+		self.Board[0] = [[] for i in range(8)]
+		#print(self.Board) 
 		deck = NewDeck()
 		# Shuffle(deck)
 		left = 52
@@ -141,68 +163,149 @@ class FreeCellGame:
 
 # print the board in the standard way
 	def PrintBoard(self):
-		# print the first 6 rows of 8 cards each
-		for j in range (0, 6):
-			for i in range(1, self.cols):
-				#print(self.Board[i])
-				card = self.Board[i][j]
+		for i in range(8):
+			if len(self.Board[0][i]) > 0:
+				card = self.Board[0][i][-1]
 				print(MSCardName(card) + " ", end='')
-			print()
-		# print the last row of 4 cards
-		for i in range(1, 5):
-			card = self.Board[i][6]
-			print(MSCardName(card) + " ", end='')
+			else:
+				print("   ", end='')
 		print()
 
+		j  = 0
+		pcnt = 0
+		while True:
+			for i in range(1, self.cols):
+				if j < len(self.Board[i]):
+					card = self.Board[i][j]
+					print(MSCardName(card) + " ", end='')
+					pcnt += 1
+				else:
+					print("   ", end='')
+			print()
+			j += 1
+			if pcnt == 0:
+				break
+			pcnt = 0
 # print the board using color and glyphs
 	def PrintFancyBoard(self):
-		# print the first 6 rows of 8 cards each
-		for j in range (0, 6):
-			for i in range(1, self.cols):
-				print(bg.green, end='')
-				#print(self.Board[i])
-				card = self.Board[i][j]
-				if MSRedCard(card):
-					print(fg.red, end='')
-				else:
-					print(fg.black, end='')
+		print(bg.green, end='')
+		for i in range(8):
+			if len(self.Board[0][i]) > 0:
+				card = self.Board[0][i][-1]
+				CardColor(card)
 				print(MSCardName(card) + " ", end='')
-				print(bg.black, end='')
-			print()
-		# print the last row of 4 cards
-		print(bg.green, end='')		
-		for i in range(1, 5):
-			card = self.Board[i][6]
-			if MSRedCard(card):
-				print(fg.red, end='')
 			else:
-				print(fg.black, end='')
-			print(MSCardName(card) + " ", end='')
-		print("            ", end='')
+				print("   ", end='')
 		print(bg.black, end='')
+		print()
+
+		j  = 0
+		pcnt = 0
+		while True:
+			print(bg.green, end='')
+			for i in range(1, self.cols):
+				if j < len(self.Board[i]):
+					card = self.Board[i][j]
+					CardColor(card)
+					pcnt += 1
+					print(MSCardName(card) + " ", end='')
+					pcnt += 1
+				else:
+					print("   ", end='')
+			print(bg.black, end='')
+			print()
+			j += 1
+			if pcnt == 0:
+				break
+			pcnt = 0
 		print()
 		print(reset, end='')
 
-	def MtoC(s):
-		return(int(s)-40)
-	def move(m):
-		f = m[0]
-		t = m[1]
-
+# moves a single card
+	def move(self, m):
+		rankmap = [1, 2, 0, 3]
+		fcih = GetCIH(m[0])
+		tcih = GetCIH(m[1])
+		if tcih[2]: # special case to home
+			card = self.Board[fcih[0]][-1]
+			v, r, c = value(card), rank(card), color(card)
+			card = self.Board[fcih[0]].pop()
+			self.Board[0][rankmap[r]].append(card)
+		else:
+			print(fcih)
+			print(tcih)
+			if fcih[1] > -1:
+				card = self.Board[0][fcih[1]].pop()
+				self.freecells += 1
+			else:
+				card = self.Board[fcih[0]].pop()
+				if len(self.Board[fcih[0]]) == 0:
+					self.freetabs += 1
+			if tcih[1] > -1:
+				self.Board[0][tcih[1]].append(card)
+				self.freecells -= 1
+			else:
+				if len(self.Board[tcih[0]]) == 0:
+					self.freetabs -= 1
+				self.Board[tcih[0]].append(card)
 
 # test board 5
-def test():
+def test1():
 	a = FreeCellGame()
 	a.NewGame(5)
 	a.PrintFancyBoard()
+
+def test2():
+	a = FreeCellGame()
+	a.NewGame(10913)
+	a.PrintFancyBoard()
+
+def test3():
+	a = FreeCellGame()
+	a.NewGame(10913)
+	a.PrintFancyBoard()
+	a.move("2a")
+	a.move("a6")
+	a.move("4h")
+	a.move("8h")
+	a.move("2a")
+	a.PrintFancyBoard()
+
+def test4():
+	a = FreeCellGame()
+	a.NewGame(10913)
+	a.PrintFancyBoard()
+	a.move("26")
+	a.move("76")
+	a.move("72")
+	a.move("72")
+	a.move("72")
+	a.move("5a")
+	a.move("27")
+	a.move("57")
+	a.move("67")
+	a.move("1b")
+	a.move("61")
+	a.move("41")
+	a.move("4h")
+	a.move("4h")
+	a.move("41")
+	a.move("45")
+	a.move("34")
+	a.move("3c")
+	a.move("6d")
+	a.move("5b")
+	a.PrintFancyBoard()
+
+
+
 
 #https://freecellgamesolutions.com/notation.html
 #Standard Move Notation
 #An example of understanding the solution in standard notation (for game 10913)
 #
 ##10913 
-#26 76 72 72 5a 27 57 67 1b 61 
-#41 4h 4h 41 45 34 3c 6d 5b 
+#26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 41 45 34 3c 6d 5b 
 #
 #a, b, c, d - free cells, 
 #1, 2 .. 8 - columns, 
