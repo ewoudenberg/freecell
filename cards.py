@@ -16,7 +16,7 @@ CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
 MSRankNames = ["C", "D", "H", "S"]
 MSRankGlyphs = ["♣", "♦", "♥", "♠"]
 #Colors = ["Red", "Red", "Black", "Black"]
-rankmap = [1, 2, 0, 3]
+rankmap = [0, 1, 2, 3]
 max = 52
 
 # Create a deck of cards
@@ -107,6 +107,11 @@ class FreeCellGame:
 
 # Generate a new Freecell game and set up the board, game 5 is easy so it's the default
 	def NewGame(self, game=5):
+		# the board is 8 columns x as many rows are needed, a maxiumum of 21 (13+8) I believe.
+		# In fact the board here is 9 columns because  column 0 is the top row.
+		# The top row contains the 4 foundations and the 4 freecells.
+		# So in each of the 8 rows of column 0 there is a list
+		# All the other columns have just a single list where we do pop and append.
 		self.Board = [[-1 for j in range(self.rows)] for i in range(self.cols)]
 		self.Board[0] = [[] for i in range(8)]
 		#print(self.Board) 
@@ -162,7 +167,14 @@ class FreeCellGame:
 	def PrintFancyBoard(self):
 		# the top row of freecells and foundations piles is stored in column 0
 		print(ansi.bg.green, end='')
-		for i in range(8):
+		for i in range(4,8):
+			if len(self.Board[0][i]) > 0:
+				card = self.Board[0][i][-1]
+				CardColor(card)
+				print(MSCardName(card) + " ", end='')
+			else:
+				print("   ", end='')
+		for i in range(0,4):
 			if len(self.Board[0][i]) > 0:
 				card = self.Board[0][i][-1]
 				CardColor(card)
@@ -225,7 +237,59 @@ class FreeCellGame:
 				if len(self.Board[tcih[0]]) == 0:
 					self.freetabs -= 1
 				self.Board[tcih[0]].append(card)
-	# automatically move cards and the bottom of the tableau to the foundations
+
+
+	def cmove(self, m, cnt):
+		if cnt == 1:
+			self.move(m)
+		else:
+			fcih = GetCIH(m[0])
+			tcih = GetCIH(m[1])
+			cards = self.Board[fcih[0]][::-1][0:cnt]
+			print("cards", cards)
+			self.Board[tcih[0]].extend(cards[::-1])
+			for i in range(cnt):
+				self.Board[fcih[0]].pop()
+
+	def possibleMoves(self, card):
+		ret = []
+		# check if card can go to foundation
+		cr, cv = rankmap[rank(card)], value(card)
+		if cv == 0 or (len(self.Board[0][cr]) > 0 and value(self.Board[0][cr][-1]) + 1 == cv):
+			append(ret, "h")
+
+		# check if card can go to other tableau
+		for i in range(1, self.cols):
+			if len(self.Board[i]) < 1:
+				continue # skip empty columns
+			tc = self.Board[i][-1]
+			r, v = rankmap[rank(tc)], value(tc)
+			if v - 1 == cv and color(card) != color(cv):
+				append(ret, chr(i))
+		return ret
+
+	# see if more than one card can be moves from the supplied col
+	def compoundMove(self, m, freecells, freepiles):
+		if m[0] < "1" and m[0] > "8":
+			return 1
+		col = int(m[0])
+		print("compoundMove", col, freecells, freepiles)
+		lst = self.Board[col][::-1]
+		print(lst)
+		l = len(lst)
+		cnt = 0
+		for card in lst:
+			if l > 1:
+				card2 = lst[cnt + 1]
+				if value(card2) == value(card) + 1 and color(card2) != color(card):
+					cnt += 1
+					l -= 1
+					continue
+				else:
+					break
+		return cnt+1
+
+	# automatically move cards from the bottom of the tableau and freecells to the foundations
 	def autoMoves(self):
 		for i in range(1, self.cols):
 			if len(self.Board[i]) < 1:
@@ -239,17 +303,32 @@ class FreeCellGame:
 				print("auto move ", i, "h", )
 				self.Board[0][r].append(card)
 				self.Board[i].pop()
+
 	#play moves
 	def play(self, moves):
+		self.PrintFancyBoard()
+		print(moves)
 		for m in moves:
+			print("move: ", m)
+			cards = self.compoundMove(m, self.freecells, 0)
+			print("compoundMove: ", cards)
+			#self.autoMoves()
+			#print("")
+			self.cmove(m, cards)
+			print("move: ", m)
 			self.autoMoves()
-			self.move(m)
+			print("")
 			self.PrintFancyBoard()
 			toss = input()
 
 smoves = ["26"]
-moves = ["26", "76", "72", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
+moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 # test board 5
+def test():
+	a = FreeCellGame()
+	a.NewGame(10913)
+	a.play(moves)
+
 def test1():
 	a = FreeCellGame()
 	a.NewGame(5)
@@ -275,26 +354,9 @@ def test4():
 	a = FreeCellGame()
 	a.NewGame(10913)
 	a.PrintFancyBoard()
-	a.move("26")
-	a.move("76")
-	a.move("72")
-	a.move("72")
-	a.move("72")
-	a.move("5a")
-	a.move("27")
-	a.move("57")
-	a.move("67")
-	a.move("1b")
-	a.move("61")
-	a.move("41")
-	a.move("4h")
-	a.move("4h")
-	a.move("41")
-	a.move("45")
-	a.move("34")
-	a.move("3c")
-	a.move("6d")
-	a.move("5b")
-	a.PrintFancyBoard()
+	for m in moves:
+		a.move(m)
+		print(m)
+		a.PrintFancyBoard()
 
 
