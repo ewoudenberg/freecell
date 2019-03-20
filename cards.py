@@ -1,13 +1,13 @@
 # © Copyright 2019 Lawrence E. Bakst All Rights Reserved
-# The code here generates MS compatible Freecell deals and back plays solutions.
-# Soon to make generates and evaluates moves.
+# The code here generates MS compatible Freecell deals and plays back solutions.
+# Soon to generate and evaluate moves to find solutions.
 
 import random
 import ansi
 
 # cards are numbered 1-52, so zero is an error.
 # My preferece would be that cards are in suit order so 1-13 are Ace of Hearts thru King of Hearts.
-# However MS uses card order so I decided to go with that to avoid a mapping layer.
+# However, MS uses card order so I decided to go with that to avoid a mapping layer.
 # if a card is negative it's facedown, not used for Freecell but needed for Klondike.
 
 #new system
@@ -21,7 +21,6 @@ max = 52
 #RankNames = ["Heart", "Diamond", "Spade", "Club"]
 #ShortRankNames = ["H", "D", "S", "C"]
 #Colors = ["Red", "Red", "Black", "Black"]
-
 
 # Create a deck of cards
 def NewDeck(n=max):
