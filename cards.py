@@ -219,8 +219,8 @@ class FreeCellGame:
 			card = self.Board[fcih[0]].pop()
 			self.Board[0][rankmap[r]].append(card)
 		else:
-			print(fcih)
-			print(tcih)
+			#print(fcih)
+			#print(tcih)
 			#get from card
 			if fcih[1] > -1:
 				card = self.Board[0][fcih[1]].pop()
@@ -246,36 +246,19 @@ class FreeCellGame:
 			fcih = GetCIH(m[0])
 			tcih = GetCIH(m[1])
 			cards = self.Board[fcih[0]][::-1][0:cnt]
-			print("cards", cards)
+			#print("cards", cards)
 			self.Board[tcih[0]].extend(cards[::-1])
 			for i in range(cnt):
 				self.Board[fcih[0]].pop()
-
-	def possibleMoves(self, card):
-		ret = []
-		# check if card can go to foundation
-		cr, cv = rankmap[rank(card)], value(card)
-		if cv == 0 or (len(self.Board[0][cr]) > 0 and value(self.Board[0][cr][-1]) + 1 == cv):
-			append(ret, "h")
-
-		# check if card can go to other tableau
-		for i in range(1, self.cols):
-			if len(self.Board[i]) < 1:
-				continue # skip empty columns
-			tc = self.Board[i][-1]
-			r, v = rankmap[rank(tc)], value(tc)
-			if v - 1 == cv and color(card) != color(cv):
-				append(ret, chr(i))
-		return ret
 
 	# see if more than one card can be moves from the supplied col
 	def compoundMove(self, m, freecells, freepiles):
 		if m[0] < "1" and m[0] > "8":
 			return 1
 		col = int(m[0])
-		print("compoundMove", col, freecells, freepiles)
+		#print("compoundMove", col, freecells, freepiles)
 		lst = self.Board[col][::-1]
-		print(lst)
+		#print(lst)
 		l = len(lst)
 		cnt = 0
 		for card in lst:
@@ -289,35 +272,103 @@ class FreeCellGame:
 					break
 		return cnt+1
 
-	# automatically move cards from the bottom of the tableau and freecells to the foundations
-	def autoMoves(self):
+	# what are all the possible moves for a given card returned as a list of moves
+	# if h is a valid move, it will be first in the list
+	def possibleMoves(self, card):
+		ret = []
+		# check if card can go to foundation
+		cr, cv, cc = rankmap[rank(card)], value(card), color(card)
+		if cv == 0 or (len(self.Board[0][cr]) > 0 and value(self.Board[0][cr][-1]) + 1 == cv):
+			#print("possibleMoves: h")
+			ret.append("h")
+
+		# check if card can go to other tableau
 		for i in range(1, self.cols):
 			if len(self.Board[i]) < 1:
 				continue # skip empty columns
-			card = self.Board[i][-1]
-			r, v = rankmap[rank(card)], value(card)
-			#print(i, r, v)
-			if len(self.Board[0][r]) < 1 and v != 0:
-				continue
-			if v == 0 or (len(self.Board[0][r]) > 0 and value(self.Board[0][r][-1]) + 1 == v):
-				print("auto move ", i, "h", )
-				self.Board[0][r].append(card)
-				self.Board[i].pop()
+			bc = self.Board[i][-1] # bottom card
+			r, v, c = rankmap[rank(bc)], value(bc), color(bc)
+			if v - 1 == cv and c != cc:
+				ret.append(str(i))
+		return ret
+
+	# How many cards might want to for a tableax under card.
+	def mightNeed(self, card):
+		cnt = 0
+		for i in range(1, self.cols):
+			if len(self.Board[i]) < 1:
+				continue # skip empty columns
+			#print(i, ": ", self.Board[i])
+			for c in self.Board[i]:
+				if value(card) > 0 and value(c) == value(card) -1 and color(c) != color(card):
+					cnt += 1
+		for i in range(0, 4):
+			if len(self.Board[0][i]) == 1:
+				c = self.Board[0][i][-1]
+				#print(c, card)
+				if value(c) == value(card) -1 and color(c) != color(card):
+					cnt += 1
+		return cnt
+
+
+	# reverse engineering this was the hardest part of this project
+	# automatically move cards from the bottom of the tableau and freecells to the foundations
+	def autoMoves(self):
+		while True:
+			iter = 0
+			# check tableau
+			for i in range(1, self.cols):
+				if len(self.Board[i]) < 1:
+					continue # skip empty columns
+				card = self.Board[i][-1] # bottom card of column
+				r, v, c = rankmap[rank(card)], value(card), color(card)
+
+				#print(i, r, v, c, MSCardName(card))
+				if len(self.Board[0][r]) < 1 and v != 0:
+					continue
+
+				moves = self.possibleMoves(card)
+				cnt = self.mightNeed(card)
+				#print("autoMoves: card=", MSCardName(card), "moves: ", moves, "cnt: ", cnt)
+				if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or v < 2):
+					#  move card to foundation
+					#print("autoMoves: tableau", i)
+					self.Board[0][r].append(card)
+					self.Board[i].pop()
+					iter += 1
+			# check for freecells to be moved to foundations
+			for i in range(4,8):
+				if len(self.Board[0][i]) > 0:
+					card = self.Board[0][i][-1]
+					moves = self.possibleMoves(card)
+					cnt = self.mightNeed(card)
+					# this code almost copy/paste from above, fix
+					if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or v < 2):
+						#  move card to foundation
+						#print("autoMoves: freecell", i)
+						self.Board[0][rankmap[rank(card)]].append(card)
+						self.Board[0][i].pop()
+						iter += 1
+
+			if iter == 0:
+				break
+			# might be more cards to move, try again
 
 	#play moves
 	def play(self, moves):
 		self.PrintFancyBoard()
-		print(moves)
+		toss = input()
+		#print(moves)
 		for m in moves:
-			print("move: ", m)
+			#print("move: ", m)
 			cards = self.compoundMove(m, self.freecells, 0)
-			print("compoundMove: ", cards)
+			#print("compoundMove: ", cards)
 			#self.autoMoves()
 			#print("")
 			self.cmove(m, cards)
 			print("move: ", m)
 			self.autoMoves()
-			print("")
+			#print("")
 			self.PrintFancyBoard()
 			toss = input()
 
