@@ -104,160 +104,20 @@ def rand():
     state = ((214013 * state) + 2531011) % 2147483648 # mod 2^31
     return  state // 65536
 
-def GetShuffledDeck(seed):
-    shuffled = []
-    srand(seed)
-    deck = NewDeck()
-    while deck:
-        idx = rand() % len(deck)
-        card = deck[idx]
-        deck[idx] = deck[-1]
-        deck.pop()
-        shuffled.append(Card(number=card))
-    return shuffled
-
-def printcard(card):
-    chars = ansi.bg.green
-    if card:
-        chars += card.as_string()
-    else:
-        chars += '   '
-    chars += ansi.bg.black
-    print(chars, end='')
 
 
-# Card is created with the MS "card number" 1-52
-class Card:
-    def __init__(self, number):
-        if number < 1 or number > 52:
-            raise Exception(f'Card {number} is not in range')
 
-        self.suit = suit(number)
-        self.rank = rank(number)
-        self.value = CardRanks.index(self.rank)
-        self.glyph = glyph(number)
-        # print (f'card number={number} suit={self.suit} rank={self.rank}')
 
-    def color(self):
-        return 'red' if self.suit in 'DH' else 'black'
 
-    def can_cascade(self, newcard):
-        return self.color() != newcard.color() and (self.value - 1) == newcard.value
 
-    def can_home(self, newcard):
-        return self.suit == newcard.suit and (self.value + 1) == newcard.value
 
-    def as_string(self, glyph=True):
-        color = ansi.fg.__dict__[self.color()]
-        if glyph:
-            return f'{color}{self.rank}{self.glyph} '
-        else:
-            return f'{color}{self.rank}{self.suit} '
-    
-# Implements:
-# 1) A cascade (max_length None, cascade True)
-# 2) A home (max_length None, cascade False)
-# 3) A free cell (max_length 1, cascade DONT CARE)
 
-class Column(list):
-    def __init__(self, max_length=None, cascade=True):
-        self.max_length = max_length
-        self.cascade = cascade
 
-    def add_card(self, card):
-        if not self.can_take_card(card):
-            raise Exception(f'Column botch: {card} cannot be added to {self}')
-        self.append(card)
 
-    def add_card_from_dealer(self, card):
-        self.append(card)
 
-    def can_take_card(self, card):
-        if self.max_length and len(self) == self.max_length:
-            return False
-        if self.cascade:
-            if len(self) == 0:
-                return True
-            return self[-1].can_cascade(card)
-        else:
-            if len(self) == 0:
-                return card.rank == 'A'
-            return self[-1].can_home(card)
 
-    def card_in_row(self, row):
-        if row < len(self):
-            return self[row]
 
-    def top_card(self):
-        if self:
-            return self[-1]
 
-class ColumnGroup(dict):
-    def find_column_for_card(self, card):
-        for i in self.values():
-            if i.can_take_card(card):
-                return i
-
-    def get_row_count(self):
-        longest = 0
-        for i in self.values():
-            longest = max(longest, len(i))
-        return longest
-
-class Board:
-    def __init__(self):
-        self.homes = ColumnGroup({i: Column(cascade=False) for i in 'hxyz'})
-        self.frees = ColumnGroup({i: Column(max_length=1) for i in 'abcd'})
-        self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
-
-    def setup(self, seed):
-        deck = GetShuffledDeck(seed)
-        tableau_size = len(self.tableau)
-        tableau = list(self.tableau.values())
-        for i in range(len(deck)):
-            tableau[i % tableau_size].add_card_from_dealer(deck[i])
-
-    def print(self):
-        for i in self.frees.values(): printcard(i.top_card())
-        for i in self.homes.values(): printcard(i.top_card())
-        print()
-        for i in range(self.tableau.get_row_count()):
-            for j in self.tableau.values(): printcard(j.card_in_row(i))
-            print()
-        print(ansi.reset, end='')
-        for i in range(1,9):
-            print(f'{i}  ', end='')
-        print()
-
-    def get_column(self, location):
-        for i in self.homes, self.frees, self.tableau:
-            if location in i:
-                return i[location]
-
-    def get_dst_column(self, location, card):
-        if location != 'h':
-            return self.get_column(location)
-
-        for i in self.homes.values():
-            if i.can_take_card(card):
-                return i
-
-    # "move" parameter is a two character string: <source><destination>
-    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
-    def raw_move(self, move):
-        src, dst = tuple(move)
-        sc = self.get_column(src)
-        card = sc.top_card()
-        if not card:
-            raise MoveException(f'No card at {move}')
-
-        dc = self.get_dst_column(dst, card)
-        
-        if dc is not None and dc.can_take_card(card):
-            dc.add_card(card)
-            sc.pop()
-        else:
-            raise MoveException(f'Illegal move {move}')
 
 # code to implement a FreeCellGame
 class FreeCellGame:
@@ -547,6 +407,169 @@ def test2():
     a = FreeCellGame()
     a.NewGame(10913)
     a.PrintFancyBoard()
+
+
+
+
+
+
+def GetShuffledDeck(seed):
+    shuffled = []
+    srand(seed)
+    deck = NewDeck()
+    while deck:
+        idx = rand() % len(deck)
+        card = deck[idx]
+        deck[idx] = deck[-1]
+        deck.pop()
+        shuffled.append(Card(number=card))
+    return shuffled
+
+def printcard(card):
+    chars = ansi.bg.green
+    if card:
+        chars += card.as_string()
+    else:
+        chars += '   '
+    chars += ansi.bg.black
+    print(chars, end='')
+
+
+# Card is created with the MS "card number" 1-52
+class Card:
+    def __init__(self, number):
+        if number < 1 or number > 52:
+            raise Exception(f'Card {number} is not in range')
+
+        self.suit = suit(number)
+        self.rank = rank(number)
+        self.value = CardRanks.index(self.rank)
+        self.glyph = glyph(number)
+        # print (f'card number={number} suit={self.suit} rank={self.rank}')
+
+    def color(self):
+        return 'red' if self.suit in 'DH' else 'black'
+
+    def can_cascade(self, newcard):
+        return self.color() != newcard.color() and (self.value - 1) == newcard.value
+
+    def can_home(self, newcard):
+        return self.suit == newcard.suit and (self.value + 1) == newcard.value
+
+    def as_string(self, glyph=True):
+        color = ansi.fg.__dict__[self.color()]
+        if glyph:
+            return f'{color}{self.rank}{self.glyph} '
+        else:
+            return f'{color}{self.rank}{self.suit} '
+    
+# Implements:
+# 1) A cascade (max_length None, cascade True)
+# 2) A home (max_length None, cascade False)
+# 3) A free cell (max_length 1, cascade DONT CARE)
+
+class Column(list):
+    def __init__(self, max_length=None, cascade=True):
+        self.max_length = max_length
+        self.cascade = cascade
+
+    def add_card(self, card):
+        if not self.can_take_card(card):
+            raise Exception(f'Column botch: {card} cannot be added to {self}')
+        self.append(card)
+
+    def add_card_from_dealer(self, card):
+        self.append(card)
+
+    def can_take_card(self, card):
+        if self.max_length and len(self) == self.max_length:
+            return False
+        if self.cascade:
+            if len(self) == 0:
+                return True
+            return self[-1].can_cascade(card)
+        else:
+            if len(self) == 0:
+                return card.rank == 'A'
+            return self[-1].can_home(card)
+
+    def card_in_row(self, row):
+        if row < len(self):
+            return self[row]
+
+    def top_card(self):
+        if self:
+            return self[-1]
+
+class ColumnGroup(dict):
+    def find_column_for_card(self, card):
+        for i in self.values():
+            if i.can_take_card(card):
+                return i
+
+    def get_row_count(self):
+        longest = 0
+        for i in self.values():
+            longest = max(longest, len(i))
+        return longest
+
+class Board:
+    def __init__(self):
+        self.homes = ColumnGroup({i: Column(cascade=False) for i in 'hxyz'})
+        self.frees = ColumnGroup({i: Column(max_length=1) for i in 'abcd'})
+        self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
+
+    def setup(self, seed):
+        deck = GetShuffledDeck(seed)
+        tableau_size = len(self.tableau)
+        tableau = list(self.tableau.values())
+        for i in range(len(deck)):
+            tableau[i % tableau_size].add_card_from_dealer(deck[i])
+
+    def print(self):
+        for i in self.frees.values(): printcard(i.top_card())
+        for i in self.homes.values(): printcard(i.top_card())
+        print()
+        for i in range(self.tableau.get_row_count()):
+            for j in self.tableau.values(): printcard(j.card_in_row(i))
+            print()
+        print(ansi.reset, end='')
+        for i in range(1,9):
+            print(f'{i}  ', end='')
+        print()
+
+    def get_column(self, location):
+        for i in self.homes, self.frees, self.tableau:
+            if location in i:
+                return i[location]
+
+    def get_dst_column(self, location, card):
+        if location != 'h':
+            return self.get_column(location)
+
+        for i in self.homes.values():
+            if i.can_take_card(card):
+                return i
+
+    # "move" parameter is a two character string: <source><destination>
+    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
+    def raw_move(self, move):
+        src, dst = tuple(move)
+        sc = self.get_column(src)
+        card = sc.top_card()
+        if not card:
+            raise MoveException(f'No card at {move}')
+
+        dc = self.get_dst_column(dst, card)
+        
+        if dc is not None and dc.can_take_card(card):
+            dc.add_card(card)
+            sc.pop()
+        else:
+            raise MoveException(f'Illegal move {move}')
+
+
+
 
 import sys
 
