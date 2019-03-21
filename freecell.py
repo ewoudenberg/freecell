@@ -4,6 +4,7 @@
 
 import random
 import ansi
+import math
 
 # cards are numbered 1-52, so zero is an error.
 # My preferece would be that cards are in suit order so 1-13 are Ace of Hearts thru King of Hearts.
@@ -463,7 +464,7 @@ class Card:
 # Implements:
 # 1) A cascade (max_length None, cascade True)
 # 2) A home (max_length None, cascade False)
-# 3) A free cell (max_length 1, cascade DONT CARE)
+# 3) A free cell (max_length 1, cascade False)
 
 class Column(list):
     def __init__(self, max_length=None, cascade=True):
@@ -478,6 +479,14 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
+    def add_column(self, src_column, supermove_size):
+        card_count = self.get_column_move_size(src_column, supermove_size)
+        if card_count:
+            src_cards = src_column[-card_count:]
+            src_column[-card_count:] = []
+            for card in src_cards:
+                self.add_card(card)
+
     def can_take_card(self, card):
         if self.max_length and len(self) >= self.max_length:
             return False
@@ -490,14 +499,42 @@ class Column(list):
                 return card.rank == 'A'
             return self[-1].can_home(card)
 
+
+    # How many cards from the src column can we move into ours
+    def get_column_move_size(self, src_column, supermove_room):
+        max_cards = min(supermove_room, src_column.get_final_run_length())
+        for i in range(max_cards):
+            card = src_column.get_top_card(depth=i)
+            if self.can_take_card(card):
+                return i+1
+        return 0
+
+    # How many cards in a row does this cascade column end with?
+    def get_final_run_length(self):
+        card = self.get_top_card()
+        if not self.cascade or not card:
+            return 0
+
+        run_length = 1
+        # Start with the second to last card and step backwards
+        for prior_card in self[-2::-1]:
+            if not prior_card.can_cascade(card):
+                break
+            run_length += 1
+            card = prior_card
+        return run_length
+
     def get_card_in_row(self, row):
         if row < len(self):
             return self[row]
 
-    def get_top_card(self):
-        if self:
-            return self[-1]
+    def get_top_card(self, depth=0):
+        if len(self) > depth:
+            return self[-1-depth]
 
+
+# Bundle up the columns in a dictionary, indexed by their name
+# e.g. "a" through "d", "1" through "8"
 class ColumnGroup(dict):
     def find_column_for_card(self, card):
         for i in self.values():
@@ -512,9 +549,10 @@ class ColumnGroup(dict):
 
 class Board:
     def __init__(self):
-        self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
-        self.frees = ColumnGroup({i: Column(max_length=1) for i in 'abcd'})
+        self.frees = ColumnGroup({i: Column(max_length=1, cascade=True) for i in 'abcd'})
         self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
+         # (just use range here since homes are never accessed by column)
+        self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
 
     def setup(self, seed):
         deck = GetShuffledDeck(seed)
@@ -558,6 +596,13 @@ class Board:
             if i.can_take_card(card):
                 return i
 
+    # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
+    # (1 + number of empty freecells) * 2 ^ (number of empty columns)
+    def get_supermove_size(self):
+        empty_frees = len([i for i in self.frees.values() if not i])
+        empty_columns = len([i for i in self.tableau.values() if not i])
+        return int(math.pow((1 + empty_frees) * 2, empty_columns))
+
     # "move" parameter is a two character string: <source><destination>
     # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
     def raw_move(self, move):
@@ -571,6 +616,22 @@ class Board:
         if dc is not None and dc.can_take_card(card):
             dc.add_card(card)
             sc.pop()
+        else:
+            raise MoveException(f'Illegal move {move}')
+
+    # "move" parameter is a two character string: <source><destination>
+    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
+    def compound_move(self, move):
+        src, dst = tuple(move)
+        sc = self.get_src_column(src)
+        card = sc and sc.get_top_card()
+        if not card:
+            raise MoveException(f'No card at {move}')
+
+        dc = self.get_dst_column(dst, card)
+        supermove_size = self.get_supermove_size()
+        if dc is not None and dc.get_column_move_size(sc, supermove_size):
+            dc.add_column(sc, supermove_size)
         else:
             raise MoveException(f'Illegal move {move}')
 
@@ -588,7 +649,7 @@ if __name__ == '__main__':
         move = lines and lines.pop(0).strip() or input()
         log.write(move+'\n')
         try:
-            board.raw_move(move)
+            board.compound_move(move)
         except MoveException as e:
             print(f'{e}')
     
