@@ -445,7 +445,6 @@ class Card:
         self.rank = rank(number)
         self.value = CardRanks.index(self.rank)
         self.glyph = glyph(number)
-        # print (f'card number={number} suit={self.suit} rank={self.rank}')
 
     def color(self):
         return 'red' if self.suit in 'DH' else 'black'
@@ -482,7 +481,7 @@ class Column(list):
         self.append(card)
 
     def can_take_card(self, card):
-        if self.max_length and len(self) == self.max_length:
+        if self.max_length and len(self) >= self.max_length:
             return False
         if self.cascade:
             if len(self) == 0:
@@ -493,11 +492,11 @@ class Column(list):
                 return card.rank == 'A'
             return self[-1].can_home(card)
 
-    def card_in_row(self, row):
+    def get_card_in_row(self, row):
         if row < len(self):
             return self[row]
 
-    def top_card(self):
+    def get_top_card(self):
         if self:
             return self[-1]
 
@@ -527,15 +526,19 @@ class Board:
             tableau[i % tableau_size].add_card_from_dealer(deck[i])
 
     def print(self):
-        for i in self.frees.values(): printcard(i.top_card())
-        for i in self.homes.values(): printcard(i.top_card())
+        for i in self.frees.values(): printcard(i.get_top_card())
+        for i in self.homes.values(): printcard(i.get_top_card())
         print()
+
         for i in range(self.tableau.get_row_count()):
-            for j in self.tableau.values(): printcard(j.card_in_row(i))
+            for j in self.tableau.values(): printcard(j.get_card_in_row(i))
             print()
+
+        # Place the column numbers at the bottom
         print(ansi.reset, end='')
         for i in range(1,9):
             print(f'{i}  ', end='')
+
         print()
 
     def get_src_column(self, location):
@@ -556,7 +559,7 @@ class Board:
     def raw_move(self, move):
         src, dst = tuple(move)
         sc = self.get_src_column(src)
-        card = sc and sc.top_card()
+        card = sc and sc.get_top_card()
         if not card:
             raise MoveException(f'No card at {move}')
 
