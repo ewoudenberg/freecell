@@ -499,7 +499,6 @@ class Column(list):
                 return card.rank == 'A'
             return self[-1].can_home(card)
 
-
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
@@ -552,7 +551,7 @@ class Board:
     def __init__(self):
         self.frees = ColumnGroup({i: Column(max_length=1, cascade=True) for i in 'abcd'})
         self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
-         # (just use range here since homes are never accessed by column)
+         # (just use range here since homes are never accessed by key)
         self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
 
     def setup(self, seed):
@@ -602,7 +601,8 @@ class Board:
     def get_max_supermove_size(self):
         empty_frees = len([i for i in self.frees.values() if not i])
         empty_columns = len([i for i in self.tableau.values() if not i])
-        return int(math.pow((1 + empty_frees) * 2, empty_columns))
+        # Some error in the formula -- I had to take max of empty_frees here
+        return max(empty_frees, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
     # "move" parameter is a two character string: <source><destination>
     # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
