@@ -479,8 +479,8 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
-    def add_column(self, src_column, supermove_size):
-        card_count = self.get_column_move_size(src_column, supermove_size)
+    def add_column(self, src_column, max_supermove_size):
+        card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
             src_cards = src_column[-card_count:]
             src_column[-card_count:] = []
@@ -500,7 +500,8 @@ class Column(list):
             return self[-1].can_home(card)
 
 
-    # How many cards from the src column can we move into ours
+    # Find a legal move from the src column into ours and report 
+    # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
         max_cards = min(supermove_room, src_column.get_final_run_length())
         for i in range(max_cards):
@@ -598,29 +599,14 @@ class Board:
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    def get_supermove_size(self):
+    def get_max_supermove_size(self):
         empty_frees = len([i for i in self.frees.values() if not i])
         empty_columns = len([i for i in self.tableau.values() if not i])
         return int(math.pow((1 + empty_frees) * 2, empty_columns))
 
     # "move" parameter is a two character string: <source><destination>
     # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
-    def raw_move(self, move):
-        src, dst = tuple(move)
-        sc = self.get_src_column(src)
-        card = sc and sc.get_top_card()
-        if not card:
-            raise MoveException(f'No card at {move}')
-
-        dc = self.get_dst_column(dst, card)
-        if dc is not None and dc.can_take_card(card):
-            dc.add_card(card)
-            sc.pop()
-        else:
-            raise MoveException(f'Illegal move {move}')
-
-    # "move" parameter is a two character string: <source><destination>
-    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
+    # attempts to move as many valid cards as it can on a tableau-to-tableau move
     def compound_move(self, move):
         src, dst = tuple(move)
         sc = self.get_src_column(src)
@@ -628,10 +614,11 @@ class Board:
         if not card:
             raise MoveException(f'No card at {move}')
 
+        max_supermove_size = self.get_max_supermove_size()
+
         dc = self.get_dst_column(dst, card)
-        supermove_size = self.get_supermove_size()
-        if dc is not None and dc.get_column_move_size(sc, supermove_size):
-            dc.add_column(sc, supermove_size)
+        if dc is not None and dc.get_column_move_size(sc, max_supermove_size):
+            dc.add_column(sc, max_supermove_size)
         else:
             raise MoveException(f'Illegal move {move}')
 
