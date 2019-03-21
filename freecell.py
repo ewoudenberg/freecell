@@ -538,14 +538,14 @@ class Board:
             print(f'{i}  ', end='')
         print()
 
-    def get_column(self, location):
+    def get_src_column(self, location):
         for i in self.frees, self.tableau:
             if location in i:
                 return i[location]
 
     def get_dst_column(self, location, card):
         if location != 'h':
-            return self.get_column(location)
+            return self.get_src_column(location)
 
         for i in self.homes.values():
             if i.can_take_card(card):
@@ -555,7 +555,7 @@ class Board:
     # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
     def raw_move(self, move):
         src, dst = tuple(move)
-        sc = self.get_column(src)
+        sc = self.get_src_column(src)
         card = sc.top_card()
         if not card:
             raise MoveException(f'No card at {move}')
