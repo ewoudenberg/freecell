@@ -443,24 +443,22 @@ class Card:
 
         self.suit = suit(number)
         self.rank = rank(number)
-        self.value = CardRanks.index(self.rank)
+        self.rank_index = CardRanks.index(self.rank)
         self.glyph = glyph(number)
-
-    def color(self):
-        return 'red' if self.suit in 'DH' else 'black'
+        self.color = 'red' if self.suit in 'DH' else 'black'
 
     def can_cascade(self, newcard):
-        return self.color() != newcard.color() and (self.value - 1) == newcard.value
+        return self.color != newcard.color and (self.rank_index - 1) == newcard.rank_index
 
     def can_home(self, newcard):
-        return self.suit == newcard.suit and (self.value + 1) == newcard.value
+        return self.suit == newcard.suit and (self.rank_index + 1) == newcard.rank_index
 
     def as_string(self, glyph=True):
-        color = ansi.fg.__dict__[self.color()]
+        color_sequence = ansi.fg.__dict__[self.color]
         if glyph:
-            return f'{color}{self.rank}{self.glyph} '
+            return f'{color_sequence}{self.rank}{self.glyph} '
         else:
-            return f'{color}{self.rank}{self.suit} '
+            return f'{color_sequence}{self.rank}{self.suit} '
     
 # Implements:
 # 1) A cascade (max_length None, cascade True)
@@ -514,14 +512,14 @@ class ColumnGroup(dict):
 
 class Board:
     def __init__(self):
-        self.homes = ColumnGroup({i: Column(cascade=False) for i in 'hxyz'})
+        self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
         self.frees = ColumnGroup({i: Column(max_length=1) for i in 'abcd'})
         self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
 
     def setup(self, seed):
         deck = GetShuffledDeck(seed)
-        tableau_size = len(self.tableau)
         tableau = list(self.tableau.values())
+        tableau_size = len(tableau)
         for i in range(len(deck)):
             tableau[i % tableau_size].add_card_from_dealer(deck[i])
 
@@ -547,6 +545,12 @@ class Board:
                 return i[location]
 
     def get_dst_column(self, location, card):
+        # Bonus feature: "f" serves to find any available FreeCell slot.
+        if location == 'f':
+            for i in self.frees.values():
+                if i.can_take_card(card):
+                    return i
+
         if location != 'h':
             return self.get_src_column(location)
 
