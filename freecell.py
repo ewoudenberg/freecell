@@ -539,7 +539,7 @@ class Board:
         print()
 
     def get_column(self, location):
-        for i in self.homes, self.frees, self.tableau:
+        for i in self.frees, self.tableau:
             if location in i:
                 return i[location]
 
@@ -561,15 +561,11 @@ class Board:
             raise MoveException(f'No card at {move}')
 
         dc = self.get_dst_column(dst, card)
-        
         if dc is not None and dc.can_take_card(card):
             dc.add_card(card)
             sc.pop()
         else:
             raise MoveException(f'Illegal move {move}')
-
-
-
 
 import sys
 
