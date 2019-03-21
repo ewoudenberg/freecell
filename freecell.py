@@ -556,7 +556,7 @@ class Board:
     def raw_move(self, move):
         src, dst = tuple(move)
         sc = self.get_src_column(src)
-        card = sc.top_card()
+        card = sc and sc.top_card()
         if not card:
             raise MoveException(f'No card at {move}')
 
