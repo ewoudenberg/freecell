@@ -578,9 +578,8 @@ if __name__ == '__main__':
     log = open('cell.log', 'w')
     while True:
         board.print()
-        move = (lines and lines.pop(0).strip()) or input()
+        move = lines and lines.pop(0).strip() or input()
         log.write(move+'\n')
-        log.flush()
         try:
             board.raw_move(move)
         except MoveException as e:
