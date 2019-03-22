@@ -180,16 +180,16 @@ class Board:
         deck = GetShuffledDeck(seed)
         tableau = list(self.tableau.values())
         tableau_size = len(tableau)
-        for i in range(len(deck)):
-            tableau[i % tableau_size].add_card_from_dealer(deck[i])
+        for i, card in enumerate(deck):
+            tableau[i % tableau_size].add_card_from_dealer(card)
 
     def print(self):
         for i in self.frees.values(): printcard(i.get_card_from_top())
         for i in self.homes.values(): printcard(i.get_card_from_top())
         print()
 
-        for i in range(self.tableau.get_row_count()):
-            for j in self.tableau.values(): printcard(j.get_card_from_row(i))
+        for row in range(self.tableau.get_row_count()):
+            for col in self.tableau.values(): printcard(col.get_card_from_row(row))
             print()
 
         # Place the column numbers at the bottom for easy reading.
