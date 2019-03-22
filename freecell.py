@@ -19,14 +19,21 @@ class MoveException(Exception):
     pass
 
 # This is intended to be an MS compiler runtime compatible version of rand.
-# The first 5 numbers using a seed of 1 are 41, 18467, 6334, 26500, 19169
+
 class Random:
     def __init__(self, seed):
+        self.test()
         self.state = seed
 
     def random(self):
         self.state = ((214013 * self.state) + 2531011) % 2147483648 # mod 2^31
         return self.state // 65536
+
+    def test(self):
+        self.state = 1
+        first5 = [self.random() for i in range(5)]
+        if first5 != [41, 18467, 6334, 26500, 19169]:
+            print('Caution! Random number generator FAILS to match MS compiler runtime')
 
 # Create a deck of cards
 def NewDeck(n=DECK_SIZE):
