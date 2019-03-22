@@ -263,9 +263,9 @@ class Board:
                     if card.can_cascade(board_card):
                         return True
 
-    # Hunt for cards on the tableau and in free cells that can move home,
-    # unless there are other cards on the tableau that could cascade from them.
-    # Generate moves to effect these changes.
+    # Hunt for cards on top of the tableau columns and in free cells that can
+    # be moved home, unless there are other cards on the tableau that could cascade 
+    # directly from them. Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
             for location, src_column in list(self.tableau.items()) + list(self.frees.items()):
