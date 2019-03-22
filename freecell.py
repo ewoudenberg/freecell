@@ -248,6 +248,9 @@ class Board:
     # where source can be 1-8 (the tableau), a-d (the frees) and destination 
     # can be all the source locations plus h (homes).
     def compound_move(self, move):
+        if len(move) != 2:
+            raise MoveException(f'Error, move "{move}" is not two characters')
+
         src, dst = tuple(move)
         src_column = self.get_src_column(src)
         card = src_column and src_column.get_card_from_top()
@@ -345,9 +348,6 @@ def main():
 
     while not board.is_empty():
         move = lines and lines.pop(0).strip() or input()
-        if len(move) != 2:
-            print(f'Syntax error: {move}')
-            continue
         print(f'{ansi.fg.green}manual-move: {move}{ansi.reset}')
         BoardLog.write(move+'\n')
         board.move(move)
