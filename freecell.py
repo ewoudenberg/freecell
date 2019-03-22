@@ -130,11 +130,10 @@ class Column(list):
             card = src_column.get_card_from_top(depth=i-1)
             if self.can_take_card(card):
                 return i
-        return 0
 
     # Sugar
     def can_move_cards(self, src_column, supermove_room):
-        return self.get_column_move_size(src_column, supermove_room) != 0
+        return bool(self.get_column_move_size(src_column, supermove_room))
 
     # How many cards in a row does this cascade column end with?
     def get_final_run_length(self):
