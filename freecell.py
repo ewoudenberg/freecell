@@ -184,12 +184,16 @@ class Board:
             tableau[i % tableau_size].add_card_from_dealer(card)
 
     def print(self):
-        for i in self.frees.values(): printcard(i.get_card_from_top())
-        for i in self.homes.values(): printcard(i.get_card_from_top())
+        for i in self.frees.values(): 
+            printcard(i.get_card_from_top())
+
+        for i in self.homes.values(): 
+            printcard(i.get_card_from_top())
         print()
 
         for row in range(self.tableau.get_row_count()):
-            for col in self.tableau.values(): printcard(col.get_card_from_row(row))
+            for col in self.tableau.values(): 
+                printcard(col.get_card_from_row(row))
             print()
 
         # Place the column numbers at the bottom for easy reading.
