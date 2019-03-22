@@ -242,16 +242,16 @@ class Board:
     # This attempts to move as many valid cards as it can on a tableau-to-tableau move
     def compound_move(self, move):
         src, dst = tuple(move)
-        sc = self.get_src_column(src)
-        card = sc and sc.get_card_from_top()
+        src_column = self.get_src_column(src)
+        card = src_column and src_column.get_card_from_top()
         if not card:
             raise MoveException(f'No card at {move}')
 
         max_supermove_size = self.get_max_supermove_size()
 
-        dc = self.get_dst_column(dst, card)
-        if dc is not None and dc.get_column_move_size(sc, max_supermove_size):
-            dc.add_column(sc, max_supermove_size)
+        dst_column = self.get_dst_column(dst, card)
+        if dst_column is not None and dst_column.get_column_move_size(src_column, max_supermove_size):
+            dst_column.add_column(src_column, max_supermove_size)
         else:
             raise MoveException(f'Illegal move {move}')
 
@@ -271,8 +271,8 @@ class Board:
             for location, src_column in list(self.tableau.items()) + list(self.frees.items()):
                 card = src_column.get_card_from_top()
                 if card and not self.is_card_needed(card):
-                    dc = self.homes.find_column_for_card(card)
-                    if dc is not None:
+                    dst_column = self.homes.find_column_for_card(card)
+                    if dst_column is not None:
                         yield f'{location}h'
                         break
             else:
