@@ -393,3 +393,6 @@ def test2():
     a.NewGame(10913)
     a.PrintFancyBoard()
 
+if __name__ == '__main__':
+    test()
+    
