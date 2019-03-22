@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+# This generates MS compatible Freecell deals and plays back solutions.
+
 # Original © Copyright 2019 Lawrence E. Bakst All Rights Reserved
 # Mods by E. Woudenberg
-# The code here generates MS compatible Freecell deals and plays back solutions.
 
 import random
 import ansi
