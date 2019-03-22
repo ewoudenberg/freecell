@@ -173,10 +173,7 @@ class ColumnGroup(list):
                 return i
 
     def get_row_count(self):
-        longest = 0
-        for i in self:
-            longest = max(longest, len(i))
-        return longest
+        return max(len(i) for i in self)
 
 class PrinterSheet:
     def __init__(self):
@@ -360,6 +357,7 @@ def main():
             board.move(move)
             board.print()
         
+    print(f'{ansi.reset}')
 
 if __name__ == '__main__':
     print('Type "./freecell.py test" to run with the builtin test dataset')
