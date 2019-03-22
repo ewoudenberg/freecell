@@ -258,8 +258,12 @@ class Board:
         max_supermove_size = self.get_max_supermove_size()
 
         dst_column = self.get_dst_column(dst, card)
-        if dst_column is not None and dst_column.can_move_cards(src_column, max_supermove_size):
+
+        if dst_column is not None \
+            and dst_column.can_move_cards(src_column, max_supermove_size):
+
             dst_column.add_cards_from_column(src_column, max_supermove_size)
+
         else:
             raise MoveException(f'Illegal move {move}')
 
