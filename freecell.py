@@ -241,7 +241,6 @@ class Board:
         except MoveException as e:
             print(f'{e}')
 
-
     # This moves cards between locations (tableau, frees, homes), attempting 
     # to move as many valid cards as it can on tableau-to-tableau moves.
     # The "move" parameter is a two character string: <source><destination>
@@ -284,7 +283,6 @@ class Board:
             else:
                 # If we exhaust the list without yielding a move, we're done.
                 break
-
 
     # Is there a card on the board that this card could cascade onto?
     def is_card_needed(self, card):
