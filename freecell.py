@@ -132,8 +132,8 @@ class Column(list):
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
         max_cards = min(supermove_room, src_column.get_final_run_length(), self.max_length)
-        # Loop through possible xfers, trying the largest stretch of cards first,
-        # since moves to an empty column can start from any card in the string.
+        # Loop through possible xfers (trying the largest stretch of cards first
+        # since moves to an empty column can start from any card in the string).
         for i in range(max_cards, 0, -1):
             card = src_column.get_card_from_top(depth=i-1)
             if self.can_take_card(card):
@@ -221,8 +221,8 @@ class Board:
         print()
 
     def is_empty(self):
-        in_use_frees = len([i for i in self.frees if i])
-        in_use_columns = len([i for i in self.tableau if i])
+        in_use_frees = sum([1 for i in self.frees if i])
+        in_use_columns = sum([1 for i in self.tableau if i])
         return in_use_frees + in_use_columns == 0
 
     # Find the correct column for the given source location.
