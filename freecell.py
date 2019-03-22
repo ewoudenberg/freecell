@@ -104,7 +104,7 @@ class Column(list):
     
     # Find and move the legally correct number of cards from source column
     # to ourselves, removing them from the source column.
-    def add_column(self, src_column, max_supermove_size):
+    def add_cards_from_column(self, src_column, max_supermove_size):
         card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
             src_cards = src_column[-card_count:]
@@ -135,6 +135,10 @@ class Column(list):
             if self.can_take_card(card):
                 return i
         return 0
+
+    # Sugar
+    def can_move_cards(self, src_column, supermove_room):
+        return self.get_column_move_size(src_column, supermove_room) != 0
 
     # How many cards in a row does this cascade column end with?
     def get_final_run_length(self):
@@ -254,8 +258,8 @@ class Board:
         max_supermove_size = self.get_max_supermove_size()
 
         dst_column = self.get_dst_column(dst, card)
-        if dst_column is not None and dst_column.get_column_move_size(src_column, max_supermove_size):
-            dst_column.add_column(src_column, max_supermove_size)
+        if dst_column is not None and dst_column.can_move_cards(src_column, max_supermove_size):
+            dst_column.add_cards_from_column(src_column, max_supermove_size)
         else:
             raise MoveException(f'Illegal move {move}')
 
