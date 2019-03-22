@@ -334,5 +334,5 @@ def main():
         
 
 if __name__ == '__main__':
-    print('Type ./freecell.py test to run with the builtin test dataset')
+    print('Type "./freecell.py test" to run with the builtin test dataset')
     main()
