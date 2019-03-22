@@ -304,8 +304,6 @@ def do_move(board, move):
 Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 
 def main():
-    board = Board()
-    board.setup(seed=10913)
     lines = []
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -315,6 +313,9 @@ def main():
             lines = open(sys.argv[1]).readlines()
 
     BoardLog = open('cell.log', 'w')
+
+    board = Board()
+    board.setup(seed=10913)
     board.print()
 
     while not board.is_empty():
