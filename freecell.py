@@ -117,10 +117,12 @@ class Column(list):
     def can_take_card(self, card):
         if self.max_length and len(self) >= self.max_length:
             return False
+
         if self.cascade:
             if len(self) == 0:
                 return True
             return self[-1].can_cascade(card)
+
         else:
             if len(self) == 0:
                 return card.rank == 'A' and card.glyph == self.location
@@ -165,7 +167,8 @@ class Column(list):
         if len(self) > depth:
             return self[-1-depth]
 
-# Bundle up the columns in a container
+# A unifying container for the tableau, frees and homes column groups.
+
 class ColumnGroup(list):
     def find_column_for_card(self, card):
         for i in self:
