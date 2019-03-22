@@ -216,9 +216,8 @@ class Board:
             self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
 
     def is_empty(self):
-        frees_in_use = sum([1 for i in self.frees if i])
-        tableau_in_use = sum([1 for i in self.tableau if i])
-        return frees_in_use + tableau_in_use == 0
+        columns_in_use = sum([1 for i in self.frees + self.tableau if i])
+        return columns_in_use == 0
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
