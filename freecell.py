@@ -28,7 +28,7 @@ class Random:
 
 # Create a deck of cards
 def NewDeck(n=DECK_SIZE):
-    return list(range(1, n+1))
+    return [Card(i) for i in range(1, n+1)]
 
 def GetShuffledDeck(seed):
     shuffled = []
@@ -39,7 +39,7 @@ def GetShuffledDeck(seed):
         card = deck[idx]
         deck[idx] = deck[-1]
         deck.pop()
-        shuffled.append(Card(number=card))
+        shuffled.append(card)
     return shuffled
 
 def printcard(card):
