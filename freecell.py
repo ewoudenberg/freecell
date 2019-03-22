@@ -254,7 +254,7 @@ class Board:
         src_column = self.get_src_column(src)
         card = src_column and src_column.get_card_from_top()
         if not card:
-            raise MoveException(f'No card at {move}')
+            raise MoveException(f'No card at {src}')
 
         max_supermove_size = self.get_max_supermove_size()
 
