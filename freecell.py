@@ -7,6 +7,7 @@
 import random
 import ansi
 import math
+from io import StringIO
 
 CardRanks = 'A23456789TJQK'
 CardSuits = 'CDHS'
@@ -41,15 +42,6 @@ def GetShuffledDeck(seed):
         deck.pop()
         shuffled.append(card)
     return shuffled
-
-def printcard(card):
-    chars = ansi.bg.green
-    if card:
-        chars += card.as_string()
-    else:
-        chars += '   '
-    chars += ansi.bg.black
-    print(chars, end='')
 
 # Card is created with the MS "card number" 1-52
 class Card:
@@ -186,6 +178,26 @@ class ColumnGroup(list):
             longest = max(longest, len(i))
         return longest
 
+class PrinterSheet:
+    def __init__(self):
+        self.output_file = StringIO()
+
+    def print(self, *args, **kwargs):
+        print(*args, **kwargs, file=self.output_file)
+
+    def printcard(self, card):
+        chars = ansi.bg.green
+        if card:
+            chars += card.as_string()
+        else:
+            chars += '   '
+        chars += ansi.bg.black
+        print(chars, end='', file=self.output_file)
+
+    def output(self):
+        print(self.output_file.getvalue(), end='')
+
+
 class Board:
     def __init__(self):
         self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
@@ -201,24 +213,27 @@ class Board:
             tableau[i % tableau_size].add_card_from_dealer(card)
 
     def print(self):
+        sheet = PrinterSheet()
         for i in self.frees: 
-            printcard(i.get_card_from_top())
+            sheet.printcard(i.get_card_from_top())
 
         for i in self.homes: 
-            printcard(i.get_card_from_top())
-        print()
+            sheet.printcard(i.get_card_from_top())
+        sheet.print()
 
         for row in range(self.tableau.get_row_count()):
             for col in self.tableau: 
-                printcard(col.get_card_from_row(row))
-            print()
+                sheet.printcard(col.get_card_from_row(row))
+            sheet.print()
 
         # Place the column numbers at the bottom for easy reading.
         print(ansi.reset, end='')
         for i in range(1,9):
-            print(f'{i}  ', end='')
+            sheet.print(f'{i}  ', end='')
 
-        print()
+        sheet.print()
+
+        sheet.output()
 
     def is_empty(self):
         in_use_frees = sum([1 for i in self.frees if i])
