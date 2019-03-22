@@ -270,12 +270,11 @@ class Board:
         while True:
             for location, src_column in list(self.tableau.items()) + list(self.frees.items()):
                 card = src_column.get_card_from_top()
-                if not card or self.is_card_needed(card):
-                    continue
-                dc = self.homes.find_column_for_card(card)
-                if dc is not None:
-                    yield f'{location}h'
-                    break
+                if card and not self.is_card_needed(card):
+                    dc = self.homes.find_column_for_card(card)
+                    if dc is not None:
+                        yield f'{location}h'
+                        break
             else:
                 # If we exhaust the list without yielding a move, we're done.
                 break
