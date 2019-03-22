@@ -210,9 +210,9 @@ class Board:
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
-        for i in self.frees, self.tableau:
-            if location in i:
-                return i[location]
+        for group in self.frees, self.tableau:
+            if location in group:
+                return group[location]
 
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
