@@ -204,9 +204,8 @@ class Board:
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
         deck = GetShuffledDeck(seed)
-        tableau_size = len(self.tableau)
         for i, card in enumerate(deck):
-            self.tableau[i % tableau_size].add_card_from_dealer(card)
+            self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
 
     def print(self):
         sheet = PrinterSheet()
