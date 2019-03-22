@@ -243,6 +243,14 @@ class Board:
         # Must be some error in the formula -- I had to take max of empty_frees here
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
+    # Public "move" interface that catches and prints errors.
+    def move(self, move):
+        try:
+            self.compound_move(move)
+        except MoveException as e:
+            print(f'{e}')
+
+
     # The "move" parameter is a two character string: <source><destination>
     # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes).
     # This attempts to move as many valid cards as it can on a tableau-to-tableau move
@@ -293,12 +301,6 @@ class Board:
 
 import sys
 
-def do_move(board, move):
-    try:
-        board.compound_move(move)
-    except MoveException as e:
-        print(f'{e}')
-
 Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 
 def main():
@@ -323,12 +325,12 @@ def main():
             continue
         print(f'{ansi.fg.green}manual-move: {move}{ansi.reset}')
         BoardLog.write(move+'\n')
-        do_move(board, move)
+        board.move(move)
         board.print()
 
         for move in board.automatic_moves():
             print(f'{ansi.fg.red}auto-move: {move}{ansi.reset}')
-            do_move(board, move)
+            board.move(move)
             board.print()
         
 
