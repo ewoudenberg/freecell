@@ -130,7 +130,8 @@ class Column(list):
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
         max_cards = min(supermove_room, src_column.get_final_run_length(), self.max_length)
-        # Loop through possible xfers, trying the largest stretch of cards first.
+        # Loop through possible xfers, trying the largest stretch of cards first,
+        # since moves to an empty column can start from any card in the string.
         for i in range(max_cards, 0, -1):
             card = src_column.get_card_from_top(depth=i-1)
             if self.can_take_card(card):
@@ -164,44 +165,48 @@ class Column(list):
         if len(self) > depth:
             return self[-1-depth]
 
-# Bundle up the columns in a dictionary, indexed by their name
-# e.g. "a" through "d", "1" through "8"
-class ColumnGroup(dict):
+# Bundle up the columns in a container
+class ColumnGroup(list):
     def find_column_for_card(self, card):
-        for i in self.values():
+        for i in self:
             if i.can_take_card(card):
+                return i
+
+    def get_column_for_location(self, location):
+        for i in self:
+            if i.location == location:
                 return i
 
     def get_row_count(self):
         longest = 0
-        for i in self.values():
+        for i in self:
             longest = max(longest, len(i))
         return longest
 
 class Board:
     def __init__(self):
-        self.frees = ColumnGroup({i: Column(max_length=1, cascade=True, location=i) for i in 'abcd'})
-        self.tableau = ColumnGroup({i: Column(cascade=True, location=i) for i in '12345678'})
-        self.homes = ColumnGroup({i: Column(cascade=False, location=i) for i in SuitsGlyphs})
+        self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
+        self.tableau = ColumnGroup(Column(cascade=True, location=i) for i in '12345678')
+        self.homes = ColumnGroup(Column(cascade=False, location=i) for i in SuitsGlyphs)
 
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
         deck = GetShuffledDeck(seed)
-        tableau = list(self.tableau.values())
+        tableau = list(self.tableau)
         tableau_size = len(tableau)
         for i, card in enumerate(deck):
             tableau[i % tableau_size].add_card_from_dealer(card)
 
     def print(self):
-        for i in self.frees.values(): 
+        for i in self.frees: 
             printcard(i.get_card_from_top())
 
-        for i in self.homes.values(): 
+        for i in self.homes: 
             printcard(i.get_card_from_top())
         print()
 
         for row in range(self.tableau.get_row_count()):
-            for col in self.tableau.values(): 
+            for col in self.tableau: 
                 printcard(col.get_card_from_row(row))
             print()
 
@@ -213,36 +218,37 @@ class Board:
         print()
 
     def is_empty(self):
-        in_use_frees = len([i for i in self.frees.values() if i])
-        in_use_columns = len([i for i in self.tableau.values() if i])
+        in_use_frees = len([i for i in self.frees if i])
+        in_use_columns = len([i for i in self.tableau if i])
         return in_use_frees + in_use_columns == 0
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
         for group in self.frees, self.tableau:
-            if location in group:
-                return group[location]
+            column = group.get_column_for_location(location)
+            if column is not None:
+                return column
 
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
         # Bonus feature: "f" serves to find any available FreeCell slot.
         if location == 'f':
-            for i in self.frees.values():
+            for i in self.frees:
                 if i.can_take_card(card):
                     return i
 
         if location != 'h':
             return self.get_src_column(location)
 
-        for i in self.homes.values():
+        for i in self.homes:
             if i.can_take_card(card):
                 return i
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
     def get_max_supermove_size(self):
-        empty_frees = len([i for i in self.frees.values() if not i])
-        empty_columns = len([i for i in self.tableau.values() if not i])
+        empty_frees = len([i for i in self.frees if not i])
+        empty_columns = len([i for i in self.tableau if not i])
         # Must be some error in the formula -- I had to take max of empty_frees here
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
@@ -281,7 +287,7 @@ class Board:
         # (There's never a dependency on Aces or 2s since Aces [what a "2" would 
         # cascade onto] can always move off the board to home.)
         if card.rank_index > CardRanks.index("2"):
-            for column in self.tableau.values():
+            for column in self.tableau:
                 for board_card in column:
                     if card.can_cascade(board_card):
                         return True
@@ -291,7 +297,7 @@ class Board:
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
-            for src_column in list(self.tableau.values()) + list(self.frees.values()):
+            for src_column in self.tableau + self.frees:
                 card = src_column.get_card_from_top()
                 if card and not self.is_card_needed(card):
                     dst_column = self.homes.find_column_for_card(card)
