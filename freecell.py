@@ -1,7 +1,6 @@
 # Original © Copyright 2019 Lawrence E. Bakst All Rights Reserved
 # Mods by E. Woudenberg
 # The code here generates MS compatible Freecell deals and plays back solutions.
-# Soon to generate and evaluate moves to find solutions.
 
 import random
 import ansi
@@ -80,7 +79,7 @@ class Card:
         else:
             return f'{color_sequence}{self.rank}{self.suit} '
     
-# Implements:
+# A Column implements:
 # 1) A cascade (max_length None, cascade True)
 # 2) A home (max_length None, cascade False)
 # 3) A free cell (max_length 1, cascade False)
@@ -98,6 +97,8 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
+    # Find and move the legally correct number of cards from source column
+    # to ourselves, removing them from the source column.
     def add_column(self, src_column, max_supermove_size):
         card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
@@ -106,6 +107,7 @@ class Column(list):
             for card in src_cards:
                 self.add_card(card)
 
+    # Can the given card be legally added to this columm?
     def can_take_card(self, card):
         if self.max_length and len(self) >= self.max_length:
             return False
@@ -152,7 +154,6 @@ class Column(list):
         if len(self) > depth:
             return self[-1-depth]
 
-
 # Bundle up the columns in a dictionary, indexed by their name
 # e.g. "a" through "d", "1" through "8"
 class ColumnGroup(dict):
@@ -174,6 +175,7 @@ class Board:
          # (just use range here since homes are never accessed by key)
         self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
 
+    # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
         deck = GetShuffledDeck(seed)
         tableau = list(self.tableau.values())
@@ -190,7 +192,7 @@ class Board:
             for j in self.tableau.values(): printcard(j.get_card_from_row(i))
             print()
 
-        # Place the column numbers at the bottom
+        # Place the column numbers at the bottom for easy reading.
         print(ansi.reset, end='')
         for i in range(1,9):
             print(f'{i}  ', end='')
@@ -202,11 +204,13 @@ class Board:
         in_use_columns = len([i for i in self.tableau.values() if i])
         return in_use_frees + in_use_columns == 0
 
+    # Find the correct column for the given source location.
     def get_src_column(self, location):
         for i in self.frees, self.tableau:
             if location in i:
                 return i[location]
 
+    # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
         # Bonus feature: "f" serves to find any available FreeCell slot.
         if location == 'f':
@@ -226,12 +230,12 @@ class Board:
     def get_max_supermove_size(self):
         empty_frees = len([i for i in self.frees.values() if not i])
         empty_columns = len([i for i in self.tableau.values() if not i])
-        # Some error in the formula -- I had to take max of empty_frees here
+        # Must be some error in the formula -- I had to take max of empty_frees here
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
-    # "move" parameter is a two character string: <source><destination>
-    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes)
-    # attempts to move as many valid cards as it can on a tableau-to-tableau move
+    # The "move" parameter is a two character string: <source><destination>
+    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes).
+    # This attempts to move as many valid cards as it can on a tableau-to-tableau move
     def compound_move(self, move):
         src, dst = tuple(move)
         sc = self.get_src_column(src)
@@ -256,14 +260,12 @@ class Board:
                         return True
 
     # Hunt for cards on the tableau and in free cells that can move home,
-    # but don't move them if there are still cards on the tableau that 
-    # are dependent on them.
+    # unless there are other cards on the tableau that could cascade from them.
+    # Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
             for location, src_column in list(self.tableau.items()) + list(self.frees.items()):
                 card = src_column.get_card_from_top()
-                # If there's no card in the column, or if the card
-                # could cascade onto another card on the board, don't move it.
                 if not card or self.is_card_needed(card):
                     continue
                 dc = self.homes.find_column_for_card(card)
@@ -274,8 +276,6 @@ class Board:
                 # If we exhaust the list without yielding a move, we're done.
                 break
 
-
-
 import sys
 
 def do_move(board, move):
@@ -284,10 +284,9 @@ def do_move(board, move):
     except MoveException as e:
         print(f'{e}')
 
-
 Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 
-if __name__ == '__main__':
+def main():
     board = Board()
     board.setup(seed=10913)
     lines = []
@@ -312,4 +311,8 @@ if __name__ == '__main__':
             print(f'{ansi.fg.red}auto-move: {move}{ansi.reset}')
             do_move(board, move)
             board.print()
-    
+        
+
+if __name__ == '__main__':
+    print('Type ./freecell.py test to run with the builtin test dataset')
+    main()
