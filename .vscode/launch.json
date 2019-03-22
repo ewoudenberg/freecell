@@ -11,7 +11,7 @@
             "cwd": "${workspaceFolder}",
             "pythonPath": "/Users/ericwoudenberg/Kai/venv3.6/bin/python",
             "program": "${workspaceFolder}/freecell.py",
-            "args": [ ],
+            "args": [ "ok2.log"],
             "debugOptions": [
                 "RedirectOutput",
             ]
