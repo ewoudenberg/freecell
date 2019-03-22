@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Original © Copyright 2019 Lawrence E. Bakst All Rights Reserved
 # Mods by E. Woudenberg
 # The code here generates MS compatible Freecell deals and plays back solutions.
@@ -50,7 +52,6 @@ def printcard(card):
         chars += '   '
     chars += ansi.bg.black
     print(chars, end='')
-
 
 # Card is created with the MS "card number" 1-52
 class Card:
@@ -121,7 +122,7 @@ class Column(list):
             return self[-1].can_cascade(card)
         else:
             if len(self) == 0:
-                return card.rank == 'A'
+                return card.rank == 'A' and card.glyph == self.location
             return self[-1].can_home(card)
 
     # Find a legal move from the src column into ours and report 
@@ -176,8 +177,7 @@ class Board:
     def __init__(self):
         self.frees = ColumnGroup({i: Column(max_length=1, cascade=True, location=i) for i in 'abcd'})
         self.tableau = ColumnGroup({i: Column(cascade=True, location=i) for i in '12345678'})
-         # (just use range here since homes are never accessed by key)
-        self.homes = ColumnGroup({i: Column(cascade=False, location=f'h{i}') for i in range(4)})
+        self.homes = ColumnGroup({i: Column(cascade=False, location=i) for i in SuitsGlyphs})
 
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
