@@ -222,8 +222,8 @@ class Board:
 
     def is_empty(self):
         in_use_frees = sum([1 for i in self.frees if i])
-        in_use_columns = sum([1 for i in self.tableau if i])
-        return in_use_frees + in_use_columns == 0
+        in_use_tableau = sum([1 for i in self.tableau if i])
+        return in_use_frees + in_use_tableau == 0
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
