@@ -305,6 +305,9 @@ def main():
 
     while not board.is_empty():
         move = lines and lines.pop(0).strip() or input()
+        if len(move) > 2:
+            print(f'Bad Move: {move}')
+            continue
         print(f'{ansi.fg.green}manual-move: {move}{ansi.reset}')
         BoardLog.write(move+'\n')
         do_move(board, move)
