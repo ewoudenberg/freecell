@@ -20,24 +20,23 @@ class MoveException(Exception):
 def NewDeck(n=DECK_SIZE):
     return list(range(1, n+1))
 
-# This is supposedly an MS compiler runtime compatible version of rand
-# first 5 numbers with seed of 1 are 41, 18467, 6334, 26500, 19169
-state = 1
-def srand(seed):
-    global state
-    state = seed
+# This is intended to be an MS compiler runtime compatible version of rand.
+# The first 5 numbers using a seed of 1 are 41, 18467, 6334, 26500, 19169
 
-def rand():
-    global state
-    state = ((214013 * state) + 2531011) % 2147483648 # mod 2^31
-    return  state // 65536
+class Random:
+    def __init__(self, seed):
+        self.state = seed
+
+    def random(self):
+        self.state = ((214013 * self.state) + 2531011) % 2147483648 # mod 2^31
+        return self.state // 65536
 
 def GetShuffledDeck(seed):
     shuffled = []
-    srand(seed)
+    rand = Random(seed)
     deck = NewDeck()
     while deck:
-        idx = rand() % len(deck)
+        idx = rand.random() % len(deck)
         card = deck[idx]
         deck[idx] = deck[-1]
         deck.pop()
