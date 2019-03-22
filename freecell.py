@@ -261,6 +261,8 @@ class Board:
 
     # Is there are card on the board that this card could cascade onto?
     def is_card_needed(self, card):
+        # (We don't have to worry about a "2" since Aces [what a "2" would 
+        # cascade onto] can always move off the board to home.)
         if card.rank_index > 1:
             for column in self.tableau.values():
                 for board_card in column:
