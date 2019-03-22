@@ -77,11 +77,14 @@ class Card:
             return f'{color_sequence}{self.rank}{self.glyph} '
         else:
             return f'{color_sequence}{self.rank}{self.suit} '
+
+    def __repr__(self):
+        return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
     
-# A Column implements:
-# 1) A cascade (max_length None, cascade True)
+# Columns are used to implement:
+# 1) A tableau column (max_length None, cascade True)
 # 2) A home (max_length None, cascade False)
-# 3) A free cell (max_length 1, cascade False)
+# 3) A free cell (max_length 1, cascade True)
 
 class Column(list):
     def __init__(self, max_length=None, cascade=True, location='unknown'):
