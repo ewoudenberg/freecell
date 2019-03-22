@@ -208,9 +208,9 @@ class Board:
             self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
 
     def is_empty(self):
-        in_use_frees = sum([1 for i in self.frees if i])
-        in_use_tableau = sum([1 for i in self.tableau if i])
-        return in_use_frees + in_use_tableau == 0
+        frees_in_use = sum([1 for i in self.frees if i])
+        tableau_in_use = sum([1 for i in self.tableau if i])
+        return frees_in_use + tableau_in_use == 0
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
@@ -234,14 +234,6 @@ class Board:
             if i.can_take_card(card):
                 return i
 
-    # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
-    # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    def get_max_supermove_size(self):
-        empty_frees = len([i for i in self.frees if not i])
-        empty_columns = len([i for i in self.tableau if not i])
-        # Must be some error in the formula -- I had to take max of empty_frees here
-        return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
-
     # Public "move" interface that catches and prints errors.
     def move(self, move):
         try:
@@ -250,9 +242,11 @@ class Board:
             print(f'{e}')
 
 
+    # This moves cards between locations (tableau, frees, homes), attempting 
+    # to move as many valid cards as it can on tableau-to-tableau moves.
     # The "move" parameter is a two character string: <source><destination>
-    # where source or destination can be 1-8 (the tableau), a-d (the frees) or h (homes).
-    # This attempts to move as many valid cards as it can on a tableau-to-tableau move
+    # where source can be 1-8 (the tableau), a-d (the frees) and destination 
+    # can be all the source locations plus h (homes).
     def compound_move(self, move):
         src, dst = tuple(move)
         src_column = self.get_src_column(src)
@@ -272,16 +266,6 @@ class Board:
         else:
             raise MoveException(f'Illegal move {move}')
 
-    # Is there a card on the board that this card could cascade onto?
-    def is_card_needed(self, card):
-        # (There's never a dependency on Aces or 2s since Aces [what a "2" would 
-        # cascade onto] can always move off the board to home.)
-        if card.rank_index > CardRanks.index("2"):
-            for column in self.tableau:
-                for board_card in column:
-                    if card.can_cascade(board_card):
-                        return True
-
     # Hunt for cards on top of the tableau columns and in free cells that can
     # be moved home (unless there are other cards on the tableau that could cascade 
     # directly from them). Generate moves to effect these changes.
@@ -297,6 +281,25 @@ class Board:
             else:
                 # If we exhaust the list without yielding a move, we're done.
                 break
+
+
+    # Is there a card on the board that this card could cascade onto?
+    def is_card_needed(self, card):
+        # (There's never a dependency on Aces or 2s since Aces [what a "2" would 
+        # cascade onto] can always move off the board to home.)
+        if card.rank_index > CardRanks.index("2"):
+            for column in self.tableau:
+                for board_card in column:
+                    if card.can_cascade(board_card):
+                        return True
+
+    # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
+    # (1 + number of empty freecells) * 2 ^ (number of empty columns)
+    def get_max_supermove_size(self):
+        empty_frees = len([i for i in self.frees if not i])
+        empty_columns = len([i for i in self.tableau if not i])
+        # Must be some error in the formula -- I had to add max of empty_frees+1 to it.
+        return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
     def print(self):
         sheet = PrinterSheet()
