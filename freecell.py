@@ -280,12 +280,12 @@ class Board:
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
-            for location, src_column in list(self.tableau.items()) + list(self.frees.items()):
+            for src_column in list(self.tableau.values()) + list(self.frees.values()):
                 card = src_column.get_card_from_top()
                 if card and not self.is_card_needed(card):
                     dst_column = self.homes.find_column_for_card(card)
                     if dst_column is not None:
-                        yield f'{location}h'
+                        yield f'{src_column.location}h'
                         break
             else:
                 # If we exhaust the list without yielding a move, we're done.
