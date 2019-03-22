@@ -65,11 +65,11 @@ class Card:
         self.glyph = SuitsGlyphs[ (number - 1) % 4 ]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
-    # Can the newcard be under us in a cascade?
+    # Can the newcard be on top of us (next lower rank, opposite color) in a cascade?
     def can_cascade(self, newcard):
         return self.color != newcard.color and (self.rank_index - 1) == newcard.rank_index
 
-    # Can the new card be on top of us in homes?
+    # Can the new card be on top of us (next higher rank, same suit) in homes?
     def can_home(self, newcard):
         return self.suit == newcard.suit and (self.rank_index + 1) == newcard.rank_index
 
