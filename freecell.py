@@ -207,29 +207,6 @@ class Board:
         for i, card in enumerate(deck):
             self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
 
-    def print(self):
-        sheet = PrinterSheet()
-        for i in self.frees: 
-            sheet.printcard(i.get_card_from_top())
-
-        for i in self.homes: 
-            sheet.printcard(i.get_card_from_top())
-        sheet.print()
-
-        for row in range(self.tableau.get_row_count()):
-            for col in self.tableau: 
-                sheet.printcard(col.get_card_from_row(row))
-            sheet.print()
-
-        # Place the column numbers at the bottom for easy reading.
-        print(ansi.reset, end='')
-        for i in range(1,9):
-            sheet.print(f'{i}  ', end='')
-
-        sheet.print()
-
-        sheet.output()
-
     def is_empty(self):
         in_use_frees = sum([1 for i in self.frees if i])
         in_use_tableau = sum([1 for i in self.tableau if i])
@@ -320,6 +297,29 @@ class Board:
             else:
                 # If we exhaust the list without yielding a move, we're done.
                 break
+
+    def print(self):
+        sheet = PrinterSheet()
+        for i in self.frees: 
+            sheet.printcard(i.get_card_from_top())
+
+        for i in self.homes: 
+            sheet.printcard(i.get_card_from_top())
+        sheet.print()
+
+        for row in range(self.tableau.get_row_count()):
+            for col in self.tableau: 
+                sheet.printcard(col.get_card_from_row(row))
+            sheet.print()
+
+        # Place the column numbers at the bottom for easy reading.
+        print(ansi.reset, end='')
+        for i in range(1,9):
+            sheet.print(f'{i}  ', end='')
+        sheet.print()
+
+        sheet.output()
+
 
 import sys
 
