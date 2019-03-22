@@ -85,9 +85,10 @@ class Card:
 # 3) A free cell (max_length 1, cascade False)
 
 class Column(list):
-    def __init__(self, max_length=None, cascade=True):
+    def __init__(self, max_length=None, cascade=True, location='unknown'):
         self.max_length = max_length or DECK_SIZE
         self.cascade = cascade
+        self.location = location
 
     def add_card(self, card):
         if not self.can_take_card(card):
@@ -97,6 +98,9 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
+    def __repr__(self):
+        return f'Column at location: "{self.location}" max_length={self.max_length} cascade={self.cascade}'
+    
     # Find and move the legally correct number of cards from source column
     # to ourselves, removing them from the source column.
     def add_column(self, src_column, max_supermove_size):
@@ -170,10 +174,10 @@ class ColumnGroup(dict):
 
 class Board:
     def __init__(self):
-        self.frees = ColumnGroup({i: Column(max_length=1, cascade=True) for i in 'abcd'})
-        self.tableau = ColumnGroup({i: Column(cascade=True) for i in '12345678'})
+        self.frees = ColumnGroup({i: Column(max_length=1, cascade=True, location=i) for i in 'abcd'})
+        self.tableau = ColumnGroup({i: Column(cascade=True, location=i) for i in '12345678'})
          # (just use range here since homes are never accessed by key)
-        self.homes = ColumnGroup({i: Column(cascade=False) for i in range(4)})
+        self.homes = ColumnGroup({i: Column(cascade=False, location=f'h{i}') for i in range(4)})
 
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
