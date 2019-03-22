@@ -277,8 +277,8 @@ class Board:
             for src_column in self.tableau + self.frees:
                 card = src_column.get_card_from_top()
                 if card and not self.is_card_needed(card):
-                    dst_column = self.homes.find_column_for_card(card)
-                    if dst_column is not None:
+                    home = self.homes.find_column_for_card(card)
+                    if home is not None:
                         yield f'{src_column.location}h'
                         break
             else:
