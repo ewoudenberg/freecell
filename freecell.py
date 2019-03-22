@@ -83,7 +83,7 @@ class Card:
     
 # Columns are used to implement:
 # 1) A tableau column (max_length None, cascade True)
-# 2) A home (max_length None, cascade False)
+# 2) A home cell (max_length None, cascade False)
 # 3) A free cell (max_length 1, cascade True)
 
 class Column(list):
