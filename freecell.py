@@ -16,13 +16,8 @@ DECK_SIZE = 52
 class MoveException(Exception):
     pass
 
-# Create a deck of cards
-def NewDeck(n=DECK_SIZE):
-    return list(range(1, n+1))
-
 # This is intended to be an MS compiler runtime compatible version of rand.
 # The first 5 numbers using a seed of 1 are 41, 18467, 6334, 26500, 19169
-
 class Random:
     def __init__(self, seed):
         self.state = seed
@@ -30,6 +25,10 @@ class Random:
     def random(self):
         self.state = ((214013 * self.state) + 2531011) % 2147483648 # mod 2^31
         return self.state // 65536
+
+# Create a deck of cards
+def NewDeck(n=DECK_SIZE):
+    return list(range(1, n+1))
 
 def GetShuffledDeck(seed):
     shuffled = []
