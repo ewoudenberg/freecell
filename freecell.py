@@ -247,7 +247,7 @@ class Board:
         try:
             self.compound_move(move)
         except MoveException as e:
-            print(f'{e}')
+            print(e)
 
     # This moves cards between locations (tableau, frees, homes), attempting 
     # to move as many valid cards as it can on tableau-to-tableau moves.
@@ -286,16 +286,17 @@ class Board:
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
                     if home is not None:
-                        yield f'{src_column.location}h'
+                        yield src_column.location + 'h'
                         break
             else:
                 # If we exhaust the list without yielding a move, we're done.
                 break
 
-    # Is there a card on the board that this card could cascade onto?
+    # Is there a card on the board that this card could cascade onto? Meaning
+    # that card could become orphaned if it loses this card as a parent.
     def is_card_needed(self, card):
-        # (There's never a dependency on Aces or 2s since Aces [what a "2" would 
-        # cascade onto] can always move off the board to home.)
+        # We ignore Aces or 2s as possible dependents. Aces will never depend on 
+        # another card because they move directly to home.
         if card.rank_index > CardRanks.index("2"):
             for column in self.tableau:
                 for board_card in column:
@@ -307,7 +308,7 @@ class Board:
     def get_max_supermove_size(self):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.tableau if not i)
-        # Must be some error in the formula -- I had to add max of empty_frees+1 to it.
+        # Must be some error in the formula -- I had to add max of (empty_frees+1) to it.
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
     def print(self):
