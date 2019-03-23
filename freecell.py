@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 # This generates MS compatible Freecell deals and plays back solutions.
-# Original © Copyright 2019 Lawrence E. Bakst All Rights Reserved
-# Mods by E. Woudenberg
+
+# E. Woudenberg CC BY-SA 2019 (prompted by interest from Lawrence E. Bakst)
 
 import random
 import ansi
@@ -10,13 +10,24 @@ import math
 import copy
 from io import StringIO
 
-CardRanks = 'A23456789TJQK'
-CardSuits = 'CDHS'
-SuitsGlyphs = '♣♦♥♠'
+# Create a deck of cards
+
 DECK_SIZE = 52
 
-class MoveException(Exception):
-    pass
+def NewDeck(n=DECK_SIZE):
+    return [Card(i) for i in range(1, n+1)]
+
+def GetShuffledDeck(seed):
+    shuffled = []
+    rand = Random(seed)
+    deck = NewDeck()
+    while deck:
+        idx = rand.random() % len(deck)
+        card = deck[idx]
+        deck[idx] = deck[-1]
+        deck.pop()
+        shuffled.append(card)
+    return shuffled
 
 # This is intended to be an MS compiler runtime compatible version of rand.
 
@@ -35,32 +46,21 @@ class Random:
         if first5 != [41, 18467, 6334, 26500, 19169]:
             print('Caution! Random number generator FAILS to match MS compiler runtime')
 
-# Create a deck of cards
-def NewDeck(n=DECK_SIZE):
-    return [Card(i) for i in range(1, n+1)]
-
-def GetShuffledDeck(seed):
-    shuffled = []
-    rand = Random(seed)
-    deck = NewDeck()
-    while deck:
-        idx = rand.random() % len(deck)
-        card = deck[idx]
-        deck[idx] = deck[-1]
-        deck.pop()
-        shuffled.append(card)
-    return shuffled
+CardRanks = 'A23456789TJQK'
+CardSuits = 'CDHS'
+CardGlyphs = '♣♦♥♠'
 
 # Card is created with the MS "card number" 1-52
 class Card:
     def __init__(self, number):
-        if number < 1 or number > 52:
+        if number < 1 or number > DECK_SIZE:
             raise Exception(f'Card __init__ botch: {number} is not in range')
 
-        self.suit = CardSuits[ (number - 1) % 4 ]
-        self.rank = CardRanks[ (number - 1) // 4 ]
+        number -= 1
+        self.suit = CardSuits[number % 4]
+        self.glyph = CardGlyphs[number % 4]
+        self.rank = CardRanks[number // 4]
         self.rank_index = CardRanks.index(self.rank)
-        self.glyph = SuitsGlyphs[ (number - 1) % 4 ]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
     # Can the newcard be on top of us (next lower rank, opposite color) in a cascade?
@@ -223,11 +223,15 @@ class BoardSnapshot:
         board.homes = self.homes
         board.move_counter = self.move_counter
 
+# An exception thrown on illegal user moves
+class MoveException(Exception):
+    pass
+
 class Board:
     def __init__(self, seed):
         self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
         self.tableau = ColumnGroup(Column(cascade=True, location=i) for i in '12345678')
-        self.homes = ColumnGroup(Column(cascade=False, location=i) for i in SuitsGlyphs)
+        self.homes = ColumnGroup(Column(cascade=False, location=i) for i in CardGlyphs)
         self.move_counter = 0
         self.history = []
 
