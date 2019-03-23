@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # This generates MS compatible Freecell deals and plays back solutions.
-
 # Original © Copyright 2019 Lawrence E. Bakst All Rights Reserved
 # Mods by E. Woudenberg
 
 import random
 import ansi
 import math
+import copy
 from io import StringIO
 
 CardRanks = 'A23456789TJQK'
@@ -203,12 +203,26 @@ class PrinterSheet:
     def output(self):
         print(self.output_file.getvalue(), end='')
 
+class BoardSnapshot:
+    def __init__(self, board):
+        self.frees = copy.deepcopy(board.frees)
+        self.tableau = copy.deepcopy(board.tableau)
+        self.homes = copy.deepcopy(board.homes)
+        self.move_counter = board.move_counter
+
+    def restore(self, board):
+        board.frees = self.frees
+        board.tableau  = self.tableau
+        board.homes = self.homes
+        board.move_counter = self.move_counter
 
 class Board:
     def __init__(self):
         self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
         self.tableau = ColumnGroup(Column(cascade=True, location=i) for i in '12345678')
         self.homes = ColumnGroup(Column(cascade=False, location=i) for i in SuitsGlyphs)
+        self.move_counter = 0
+        self.history = []
 
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
@@ -242,12 +256,22 @@ class Board:
             if i.can_take_card(card):
                 return i
 
-    # Public "move" interface that catches and prints errors.
-    def move(self, move):
+    # The public "move" interface that keeps a history and reports errors.
+    def move(self, move, save_history=False):
+        success = True
+        if save_history:
+            self.snapshot()
+
         try:
             self.compound_move(move)
+
         except MoveException as e:
             print(e)
+            success = False
+            if save_history:
+                self.undo()
+
+        return success
 
     # This moves cards between locations (tableau, frees, homes), attempting 
     # to move as many valid cards as it can on tableau-to-tableau moves.
@@ -272,6 +296,7 @@ class Board:
             and dst_column.can_move_cards(src_column, max_supermove_size):
 
             dst_column.add_cards_from_column(src_column, max_supermove_size)
+            self.move_counter += 1
 
         else:
             raise MoveException(f'Illegal move {move}')
@@ -311,6 +336,13 @@ class Board:
         # Must be some error in the formula -- I had to add max of (empty_frees+1) to it.
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
+    def snapshot(self):
+        self.history.append(BoardSnapshot(self))
+
+    def undo(self):
+        if self.history:
+            self.history.pop().restore(self)
+
     def print(self):
         sheet = PrinterSheet()
         for i in self.frees: 
@@ -326,7 +358,7 @@ class Board:
             sheet.print()
 
         # Place the column numbers at the bottom for easy reading.
-        print(ansi.reset, end='')
+        sheet.print(ansi.reset, end='')
         for i in range(1,9):
             sheet.print(f'{i}  ', end='')
         sheet.print()
@@ -354,19 +386,35 @@ def main():
     board.print()
 
     while not board.is_empty():
-        move = lines and lines.pop(0).strip() or input()
-        print(f'{ansi.fg.green}manual-move: {move}{ansi.reset}')
+
+        # Try getting supplied input first
+        move = lines and lines.pop(0).strip()
+        if move:
+            print(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
+
+        # If that's exhausted, ask for manual input
+        else:
+            print(f'{ansi.fg.green}# {board.move_counter}. manual-move: {ansi.reset}', end='')
+            move = input()
+
+        if move == 'u':
+            board.undo()
+            board.print()
+            continue
+
         BoardLog.write(move+'\n')
-        board.move(move)
+        valid = board.move(move, save_history=True)
+        if not valid: 
+            # Skip the automated moves after errors.
+            continue
+
         board.print()
 
         for move in board.automatic_moves():
-            print(f'{ansi.fg.red}auto-move: {move}{ansi.reset}')
+            print(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.move(move)
             board.print()
         
-    print(f'{ansi.reset}')
-
 if __name__ == '__main__':
     print('Type "./freecell.py test" to run with the builtin test dataset')
     main()
