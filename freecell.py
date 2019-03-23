@@ -81,15 +81,18 @@ class Card:
     def __repr__(self): # for debugging
         return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
     
-# Columns are used to implement:
-# 1) A tableau column (max_length None, cascade True)
-# 2) A home cell (max_length None, cascade False [an empty cascade will accept any card])
-# 3) A free cell (max_length 1, cascade True)
+# Columns are used to implement columns in the tableau, free cells, and suit homes.
 
 class Column(list):
-    def __init__(self, max_length=None, cascade=True, location=''):
-        self.max_length = max_length or DECK_SIZE
-        self.cascade = cascade
+    def __init__(self, type=None, location=''):
+        type_configurations = dict(FREECELL=dict(max_length=1, cascade=True),
+                                   HOME=dict(max_length=DECK_SIZE, cascade=False),
+                                   TABLEAU=dict(max_length=DECK_SIZE, cascade=True))
+
+        if type not in type_configurations:
+            raise Exception(f'Column __init__ botch: unknown type "{type}"')
+                        
+        self.__dict__.update(type_configurations[type])
         self.location = location
 
     def add_card(self, card):
@@ -227,11 +230,14 @@ class BoardSnapshot:
 class MoveException(Exception):
     pass
 
+FreeCellNames = 'abcd'
+TableauNames = '12345678'
+
 class Board:
     def __init__(self, seed):
-        self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
-        self.tableau = ColumnGroup(Column(cascade=True, location=i) for i in '12345678')
-        self.homes = ColumnGroup(Column(cascade=False, location=i) for i in CardGlyphs)
+        self.homes = ColumnGroup(Column(type='HOME', location=i) for i in CardGlyphs)
+        self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
+        self.tableau = ColumnGroup(Column(type='TABLEAU', location=i) for i in TableauNames)
         self.move_counter = 0
         self.history = []
 
