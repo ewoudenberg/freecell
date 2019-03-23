@@ -55,7 +55,7 @@ def GetShuffledDeck(seed):
 class Card:
     def __init__(self, number):
         if number < 1 or number > 52:
-            raise Exception(f'Card {number} is not in range')
+            raise Exception(f'Card __init__ botch: {number} is not in range')
 
         self.suit = CardSuits[ (number - 1) % 4 ]
         self.rank = CardRanks[ (number - 1) // 4 ]
@@ -87,7 +87,7 @@ class Card:
 # 3) A free cell (max_length 1, cascade True)
 
 class Column(list):
-    def __init__(self, max_length=None, cascade=True, location='unknown'):
+    def __init__(self, max_length=None, cascade=True, location=''):
         self.max_length = max_length or DECK_SIZE
         self.cascade = cascade
         self.location = location
@@ -102,7 +102,8 @@ class Column(list):
         self.append(card)
 
     def __repr__(self):
-        return f'Column at location: "{self.location}" max_length={self.max_length} cascade={self.cascade} length={len(self)} top card={self[-1] if self else None}'
+        return f'Column at location="{self.location}" max_length={self.max_length} ' + \
+               f'cascade={self.cascade} length={len(self)} top={self.get_card_from_top()}'
     
     # Find and move the legally correct number of cards from source column
     # to ourselves, removing them from the source column.
