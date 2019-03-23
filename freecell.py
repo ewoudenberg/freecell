@@ -78,7 +78,7 @@ class Card:
         else:
             return f'{color_sequence}{self.rank}{self.suit} '
 
-    def __repr__(self):
+    def __repr__(self): # for debugging
         return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
     
 # Columns are used to implement:
@@ -94,7 +94,7 @@ class Column(list):
 
     def add_card(self, card):
         if not self.can_take_card(card):
-            # Should never get here.
+            # We should never get here
             raise Exception(f'Column.add_card botch: {card} cannot be added to {self}')
         self.append(card)
 
