@@ -186,6 +186,8 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(i) for i in self)
 
+# Someday this will be used to print multiple 
+# boards horizontally across the screen.
 class PrinterSheet:
     def __init__(self):
         self.output_file = StringIO()
