@@ -223,10 +223,8 @@ class Board:
         self.homes = ColumnGroup(Column(cascade=False, location=i) for i in SuitsGlyphs)
         self.move_counter = 0
         self.history = []
-        self.setup(seed)
 
-    # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
-    def setup(self, seed):
+        # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
             self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
