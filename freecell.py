@@ -171,15 +171,17 @@ class Column(list):
 # A unifying container for the tableau, frees and homes column groups.
 
 class ColumnGroup(list):
+    def __init__(self, *args):
+        list.__init__(self, *args)
+        self.column_lookup_table = {i.location: i for i in self}
+
     def find_column_for_card(self, card):
         for i in self:
             if i.can_take_card(card):
                 return i
 
     def get_column_for_location(self, location):
-        for i in self:
-            if i.location == location:
-                return i
+        return self.column_lookup_table.get(location)
 
     def get_row_count(self):
         return max(len(i) for i in self)
