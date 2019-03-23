@@ -257,10 +257,9 @@ class Board:
 
     # The public "move" interface that keeps a history and reports errors.
     def move(self, move, save_history=False):
-        success = True
         if save_history:
             self.snapshot()
-
+        success = True
         try:
             self.compound_move(move)
 
