@@ -259,6 +259,7 @@ class Board:
     def move(self, move, save_history=False):
         if save_history:
             self.snapshot()
+
         success = True
         try:
             self.compound_move(move)
