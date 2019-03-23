@@ -97,7 +97,7 @@ class Column(list):
         self.type = type
 
     def add_card(self, card):
-        if not self.can_take_card(card):
+        if not self.can_accept_card(card):
             # We should never get here
             raise Exception(f'Column.add_card botch: {card} cannot be added to {self}')
         self.append(card)
@@ -119,7 +119,7 @@ class Column(list):
                 self.add_card(card)
 
     # Can the given card be legally added to this columm?
-    def can_take_card(self, new_card):
+    def can_accept_card(self, new_card):
         if len(self) >= self.max_length:
             return False
 
@@ -144,7 +144,7 @@ class Column(list):
         # since moves to an empty column can start from any card in the string).
         for i in range(max_cards, 0, -1):
             card = src_column.get_card_from_top(depth=i-1)
-            if self.can_take_card(card):
+            if self.can_accept_card(card):
                 return i
         return 0
 
@@ -185,7 +185,7 @@ class ColumnGroup(list):
 
     def find_column_for_card(self, card):
         for i in self:
-            if i.can_take_card(card):
+            if i.can_accept_card(card):
                 return i
 
     def get_column_for_location(self, location):
@@ -264,14 +264,14 @@ class Board:
         # Bonus feature: "f" serves to find any available FreeCell slot.
         if location == 'f':
             for i in self.frees:
-                if i.can_take_card(card):
+                if i.can_accept_card(card):
                     return i
 
         if location != 'h':
             return self.get_src_column(location)
 
         for i in self.homes:
-            if i.can_take_card(card):
+            if i.can_accept_card(card):
                 return i
 
     # The public "move" interface that keeps a history and reports errors.
