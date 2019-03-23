@@ -217,7 +217,7 @@ class Board:
             self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
 
     def is_empty(self):
-        columns_in_use = sum([1 for i in self.frees + self.tableau if i])
+        columns_in_use = sum(1 for i in self.frees + self.tableau if i)
         return columns_in_use == 0
 
     # Find the correct column for the given source location.
@@ -305,8 +305,8 @@ class Board:
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
     def get_max_supermove_size(self):
-        empty_frees = len([i for i in self.frees if not i])
-        empty_columns = len([i for i in self.tableau if not i])
+        empty_frees = sum(1 for i in self.frees if not i)
+        empty_columns = sum(1 for i in self.tableau if not i)
         # Must be some error in the formula -- I had to add max of empty_frees+1 to it.
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
