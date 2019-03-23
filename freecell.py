@@ -63,13 +63,13 @@ class Card:
         self.rank = CardRanks[self.rank_index]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
-    # Can the newcard be on top of us (next lower rank, opposite color) in a cascade?
-    def can_cascade(self, newcard):
-        return self.color != newcard.color and (self.rank_index - 1) == newcard.rank_index
+    # Can the new_card be on top of us (next lower rank, opposite color) in a cascade?
+    def can_cascade(self, new_card):
+        return self.color != new_card.color and (self.rank_index - 1) == new_card.rank_index
 
     # Can the new card be on top of us (next higher rank, same suit) in homes?
-    def can_home(self, newcard):
-        return self.suit == newcard.suit and (self.rank_index + 1) == newcard.rank_index
+    def can_home(self, new_card):
+        return self.suit == new_card.suit and (self.rank_index + 1) == new_card.rank_index
 
     def as_string(self, glyph=True):
         color_sequence = ansi.fg.__dict__[self.color]
@@ -94,6 +94,7 @@ class Column(list):
                         
         self.__dict__.update(type_configurations[type])
         self.location = location
+        self.type = type
 
     def add_card(self, card):
         if not self.can_take_card(card):
@@ -105,8 +106,7 @@ class Column(list):
         self.append(card)
 
     def __repr__(self):
-        return f'Column at location="{self.location}" max_length={self.max_length} ' + \
-               f'cascade={self.cascade} length={len(self)} top={self.get_card_from_top()}'
+        return f'{self.type}({self.location}), length={len(self)} top={self.get_card_from_top()}'
     
     # Find and move the legally correct number of cards from source column
     # to ourselves, removing them from the source column.
@@ -119,19 +119,21 @@ class Column(list):
                 self.add_card(card)
 
     # Can the given card be legally added to this columm?
-    def can_take_card(self, card):
-        if self.max_length and len(self) >= self.max_length:
+    def can_take_card(self, new_card):
+        if len(self) >= self.max_length:
             return False
 
+        top_card = self.get_card_from_top()
+
         if self.cascade:
-            if len(self) == 0:
+            if not top_card:
                 return True
-            return self[-1].can_cascade(card)
+            return top_card.can_cascade(new_card)
 
         else:
-            if len(self) == 0:
-                return card.rank == 'A' and card.glyph == self.location
-            return self[-1].can_home(card)
+            if not top_card:
+                return new_card.rank == 'A' and new_card.glyph == self.location
+            return top_card.can_home(new_card)
 
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
