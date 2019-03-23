@@ -405,7 +405,8 @@ def main():
         BoardLog.write(move+'\n')
         valid = board.move(move, save_history=True)
         if not valid: 
-            # Skip the automated moves after errors.
+            # Skip automated moves after errors since otherwise an error 
+            # at move 0 might allow automated moves to happen.
             continue
 
         board.print()
