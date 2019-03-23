@@ -81,7 +81,7 @@ class Card:
     def __repr__(self): # for debugging
         return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
     
-# Columns are used to implement columns in the tableau, free cells, and suit homes.
+# Columns are used to implement free cells, suit homes, and columns in the tableau.
 
 class Column(list):
     def __init__(self, type=None, location=''):
