@@ -94,14 +94,15 @@ class Column(list):
 
     def add_card(self, card):
         if not self.can_take_card(card):
-            raise Exception(f'Column botch: {card} cannot be added to {self}')
+            # Should never get here.
+            raise Exception(f'Column.add_card botch: {card} cannot be added to {self}')
         self.append(card)
 
     def add_card_from_dealer(self, card):
         self.append(card)
 
     def __repr__(self):
-        return f'Column at location: "{self.location}" max_length={self.max_length} cascade={self.cascade}'
+        return f'Column at location: "{self.location}" max_length={self.max_length} cascade={self.cascade} length={len(self)} top card={self[-1] if self else None}'
     
     # Find and move the legally correct number of cards from source column
     # to ourselves, removing them from the source column.
@@ -169,6 +170,7 @@ class Column(list):
             return self[-1-depth]
 
 # A unifying container for the tableau, frees and homes column groups.
+# The constructor takes a list of columns.
 
 class ColumnGroup(list):
     def __init__(self, *args):
