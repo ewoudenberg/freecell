@@ -314,6 +314,7 @@ class Board:
             and dst_column.can_move_cards(src_column, max_supermove_size):
 
             dst_column.add_cards_from_column(src_column, max_supermove_size)
+
             self.move_counter += 1
 
         else:
