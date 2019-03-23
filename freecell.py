@@ -59,8 +59,8 @@ class Card:
         number -= 1
         self.suit = CardSuits[number % 4]
         self.glyph = CardGlyphs[number % 4]
-        self.rank = CardRanks[number // 4]
-        self.rank_index = CardRanks.index(self.rank)
+        self.rank_index = number // 4
+        self.rank = CardRanks[self.rank_index]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
     # Can the newcard be on top of us (next lower rank, opposite color) in a cascade?
