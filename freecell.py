@@ -217,12 +217,13 @@ class BoardSnapshot:
         board.move_counter = self.move_counter
 
 class Board:
-    def __init__(self):
+    def __init__(self, seed):
         self.frees = ColumnGroup(Column(max_length=1, cascade=True, location=i) for i in 'abcd')
         self.tableau = ColumnGroup(Column(cascade=True, location=i) for i in '12345678')
         self.homes = ColumnGroup(Column(cascade=False, location=i) for i in SuitsGlyphs)
         self.move_counter = 0
         self.history = []
+        self.setup(seed)
 
     # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
     def setup(self, seed):
@@ -381,8 +382,7 @@ def main():
 
     BoardLog = open('cell.log', 'w')
 
-    board = Board()
-    board.setup(seed=10913)
+    board = Board(seed=10913)
     board.print()
 
     while not board.is_empty():
