@@ -152,10 +152,14 @@ class Column(list):
     def can_move_cards(self, src_column, supermove_room):
         return self.get_column_move_size(src_column, supermove_room) != 0
 
-    # How many cards in a row does this cascade column end with?
+    # How many cards in a row does this column end with?
     def get_final_run_length(self):
+        if not self.cascade:
+            # This makes any moves from freecells and homes end with MoveException("No Card at Source")
+            return 0
+
         card = self.get_card_from_top()
-        if not self.cascade or not card:
+        if not card:
             return 0
 
         run_length = 1
@@ -175,7 +179,8 @@ class Column(list):
         if len(self) > depth:
             return self[-1-depth]
 
-# A unifying container for the tableau, frees and homes column groups.
+# A ColumnGroup is a unifying container for the tableau, frees 
+# and homes collections of columns
 # The constructor takes a list of columns.
 
 class ColumnGroup(list):
@@ -184,15 +189,15 @@ class ColumnGroup(list):
         self.column_lookup_table = {i.location: i for i in self}
 
     def find_column_for_card(self, card):
-        for i in self:
-            if i.can_accept_card(card):
-                return i
+        for column in self:
+            if column.can_accept_card(card):
+                return column
 
     def get_column_for_location(self, location):
         return self.column_lookup_table.get(location)
 
     def get_row_count(self):
-        return max(len(i) for i in self)
+        return max(len(column) for column in self)
 
 # Someday this will be used to print multiple 
 # boards horizontally across the screen.
@@ -415,12 +420,13 @@ def main():
             print(f'{ansi.fg.green}# {board.move_counter}. manual-move: {ansi.reset}', end='')
             move = input()
 
+        BoardLog.write(move+'\n')
+
         if move == 'u':
             board.undo()
             board.print()
             continue
 
-        BoardLog.write(move+'\n')
         valid = board.move(move, save_history=True)
         if not valid: 
             # Skip automated moves after errors since otherwise an error 
