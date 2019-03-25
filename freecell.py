@@ -173,7 +173,7 @@ class Column(list):
             return self[row]
 
     def get_card_from_top(self, depth=0):
-        if len(self) > depth:
+        if depth < len(self):
             return self[-1-depth]
 
 # A ColumnGroup is a unifying container for the 3 groups 
