@@ -62,11 +62,11 @@ class Card:
 
     # Can the new_card be on top of us (next lower rank, opposite color) in a cascade?
     def can_cascade(self, new_card):
-        return self.color != new_card.color and (self.rank_index - 1) == new_card.rank_index
+        return self.color != new_card.color and self.rank_index - 1 == new_card.rank_index
 
     # Can the new card be on top of us (next higher rank, same suit) in homes?
     def can_home(self, new_card):
-        return self.suit == new_card.suit and (self.rank_index + 1) == new_card.rank_index
+        return self.suit == new_card.suit and self.rank_index + 1 == new_card.rank_index
 
     def as_string(self, glyph=True):
         color_sequence = ansi.fg.__dict__[self.color]
