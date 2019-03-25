@@ -347,7 +347,7 @@ class Board:
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # another card because they move directly to home.
         if card.rank_index > CardRanks.index("2"):
-            for column in self.tableau:
+            for column in self.tableau + self.frees:
                 for board_card in column:
                     if card.can_cascade(board_card):
                         return True
