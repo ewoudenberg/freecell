@@ -305,7 +305,7 @@ class Board:
         if len(move) != 2:
             raise MoveException(f'Error, move "{move}" is not two characters')
 
-        src, dst = tuple(move)
+        src, dst = move
         src_column = self.get_src_column(src)
         card = src_column and src_column.get_card_from_top()
         if not card:
