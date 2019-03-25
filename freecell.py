@@ -107,7 +107,7 @@ class Column(list):
     def add_cards_from_column(self, src_column, max_supermove_size):
         card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
-            for card in src_column.remove_cards_from_top(card_count):
+            for card in src_column.remove_top_cards(card_count):
                 self.add_card(card)
 
     # Can the given card be legally added to this columm?
@@ -148,15 +148,15 @@ class Column(list):
     # How many cards in a row could we move from this column?
     def get_final_run_length(self):
         run_length = 0
-        card = self.get_card_from_top()
-        if card:
+        top_card = self.get_card_from_top()
+        if top_card:
             run_length += 1
-            # How far back do prior cards cascade?
+            # From how deep do the cards cascade?
             while True:
-                prior_card = self.get_card_from_top(run_length)
-                if not prior_card or not prior_card.can_cascade(card):
+                deeper_card = self.get_card_from_top(run_length)
+                if not deeper_card or not deeper_card.can_cascade(top_card):
                     break
-                card = prior_card
+                top_card = deeper_card
                 run_length += 1
         return run_length
 
@@ -168,11 +168,10 @@ class Column(list):
         if depth < len(self):
             return self[-1-depth]
 
-    def remove_cards_from_top(self, card_count):
+    def remove_top_cards(self, card_count):
         cards = self[-card_count:]
         self[-card_count:] = []
         return cards
-
 
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.get_card_from_top()}'
