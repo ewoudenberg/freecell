@@ -18,8 +18,8 @@ def NewDeck(n=DECK_SIZE):
     return [Card(i) for i in range(1, n+1)]
 
 def GetShuffledDeck(seed):
-    rand = Random(seed)
     deck = NewDeck()
+    rand = Random(seed)
     while deck:
         idx = rand.random() % len(deck)
         yield deck[idx]
