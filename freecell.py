@@ -47,7 +47,7 @@ CardRanks = 'A23456789TJQK'
 CardSuits = 'CDHS'
 CardGlyphs = '♣♦♥♠'
 
-# Card is created with the MS "card number" 1-52
+# Card is created with the MS card "number" 1-52
 class Card:
     def __init__(self, number):
         if number < 1 or number > DECK_SIZE:
@@ -102,17 +102,12 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
-    def __repr__(self):
-        return f'{self.type}({self.location}), length={len(self)} top={self.get_card_from_top()}'
-    
-    # Find and move the legally correct number of cards from source column
+    # Find and move the legally correct number of cards from the source column
     # to ourselves, removing them from the source column.
     def add_cards_from_column(self, src_column, max_supermove_size):
         card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
-            src_cards = src_column[-card_count:]
-            src_column[-card_count:] = []
-            for card in src_cards:
+            for card in src_column.remove_cards_from_top(card_count):
                 self.add_card(card)
 
     # Can the given card be legally added to this columm?
@@ -173,6 +168,15 @@ class Column(list):
         if depth < len(self):
             return self[-1-depth]
 
+    def remove_cards_from_top(self, card_count):
+        cards = self[-card_count:]
+        self[-card_count:] = []
+        return cards
+
+
+    def __repr__(self):
+        return f'{self.type}({self.location}), length={len(self)} top={self.get_card_from_top()}'
+    
 # A ColumnGroup is a unifying container for the 3 groups 
 # of columns (the tableau, the freecells and the homes).
 # The constructor takes a list of columns.
