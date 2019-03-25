@@ -115,7 +115,7 @@ class Column(list):
         if len(self) >= self.max_length:
             return False
 
-        top_card = self.get_card_from_top()
+        top_card = self.peek_card_from_top()
 
         if self.cascade:
             if not top_card:
@@ -140,7 +140,7 @@ class Column(list):
         # Loop through possible xfers (trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the string).
         for i in range(max_cards, 0, -1):
-            card = src_column.get_card_from_top(depth=i-1)
+            card = src_column.peek_card_from_top(depth=i-1)
             if self.can_accept_card(card):
                 return i
         return 0
@@ -148,23 +148,23 @@ class Column(list):
     # How many cards in a row could we move from this column?
     def get_final_run_length(self):
         run_length = 0
-        top_card = self.get_card_from_top()
+        top_card = self.peek_card_from_top()
         if top_card:
             run_length += 1
             # From how deep do the cards cascade?
             while True:
-                deeper_card = self.get_card_from_top(run_length)
+                deeper_card = self.peek_card_from_top(run_length)
                 if not deeper_card or not deeper_card.can_cascade(top_card):
                     break
                 top_card = deeper_card
                 run_length += 1
         return run_length
 
-    def get_card_from_row(self, row):
+    def peek_card_from_row(self, row):
         if row < len(self):
             return self[row]
 
-    def get_card_from_top(self, depth=0):
+    def peek_card_from_top(self, depth=0):
         if depth < len(self):
             return self[-1-depth]
 
@@ -174,7 +174,7 @@ class Column(list):
         return cards
 
     def __repr__(self):
-        return f'{self.type}({self.location}), length={len(self)} top={self.get_card_from_top()}'
+        return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_from_top()}'
     
 # A ColumnGroup is a unifying container for the 3 groups 
 # of columns (the tableau, the freecells and the homes).
@@ -296,7 +296,7 @@ class Board:
     # This moves cards between locations (tableau, frees, homes), attempting 
     # to move as many valid cards as it can on tableau-to-tableau moves.
     # The "move" parameter is a two character string: <source><destination>
-    # where source can be 1-8 (the tableau), a-d (the frees) and destination 
+    # where <source> can be 1-8 (the tableau), a-d (the frees) and <destination>
     # can be all the source locations plus h (homes).
     def compound_move(self, move):
         if len(move) != 2:
@@ -304,7 +304,7 @@ class Board:
 
         src, dst = move
         src_column = self.get_src_column(src)
-        card = src_column and src_column.get_card_from_top()
+        card = src_column and src_column.peek_card_from_top()
         if not card:
             raise MoveException(f'No card at {src}')
 
@@ -328,7 +328,7 @@ class Board:
     def automatic_moves(self):
         while True:
             for src_column in self.tableau + self.frees:
-                card = src_column.get_card_from_top()
+                card = src_column.peek_card_from_top()
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
                     if home is not None:
@@ -367,15 +367,15 @@ class Board:
     def print(self):
         sheet = PrinterSheet()
         for i in self.frees: 
-            sheet.printcard(i.get_card_from_top())
+            sheet.printcard(i.peek_card_from_top())
 
         for i in self.homes: 
-            sheet.printcard(i.get_card_from_top())
+            sheet.printcard(i.peek_card_from_top())
         sheet.print()
 
         for row in range(self.tableau.get_row_count()):
             for col in self.tableau: 
-                sheet.printcard(col.get_card_from_row(row))
+                sheet.printcard(col.peek_card_from_row(row))
             sheet.print()
 
         # Place the column numbers at the bottom for easy reading.
