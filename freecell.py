@@ -18,16 +18,13 @@ def NewDeck(n=DECK_SIZE):
     return [Card(i) for i in range(1, n+1)]
 
 def GetShuffledDeck(seed):
-    shuffled = []
     rand = Random(seed)
     deck = NewDeck()
     while deck:
         idx = rand.random() % len(deck)
-        card = deck[idx]
+        yield deck[idx]
         deck[idx] = deck[-1]
         deck.pop()
-        shuffled.append(card)
-    return shuffled
 
 # This is intended to be an MS compiler runtime compatible version of rand.
 
