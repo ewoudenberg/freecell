@@ -155,23 +155,17 @@ class Column(list):
 
     # How many cards in a row could we move from this column?
     def get_final_run_length(self):
-        if not self.cascade:
-            # This causes any move from a home cell to 
-            # throw MoveException("No Card at Source")
-            return 0
-
+        run_length = 0
         card = self.get_card_from_top()
-        if not card:
-            return 0
-
-        run_length = 1
-        # Start with the second to last card and step backwards
-        while True:
-            prior_card = self.get_card_from_top(run_length)
-            if not prior_card or not prior_card.can_cascade(card):
-                break
+        if card:
             run_length += 1
-            card = prior_card
+            # How far back do prior cards cascade?
+            while True:
+                prior_card = self.get_card_from_top(run_length)
+                if not prior_card or not prior_card.can_cascade(card):
+                    break
+                card = prior_card
+                run_length += 1
         return run_length
 
     def get_card_from_row(self, row):
