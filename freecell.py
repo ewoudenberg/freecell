@@ -135,6 +135,11 @@ class Column(list):
                 return new_card.rank == 'A' and new_card.glyph == self.location
             return top_card.can_home(new_card)
 
+    # Can some cards from the given column be added to this column, given the amount
+    # of supermove room?
+    def can_accept_column(self, src_column, supermove_room):
+        return self.get_column_move_size(src_column, supermove_room) != 0
+
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
@@ -148,14 +153,11 @@ class Column(list):
                 return i
         return 0
 
-    # Sugar
-    def can_move_cards(self, src_column, supermove_room):
-        return self.get_column_move_size(src_column, supermove_room) != 0
-
     # How many cards in a row does this column end with?
     def get_final_run_length(self):
         if not self.cascade:
-            # This makes any moves from freecells and homes end with MoveException("No Card at Source")
+            # This causes any move from a home cell to 
+            # throw MoveException("No Card at Source")
             return 0
 
         card = self.get_card_from_top()
@@ -164,8 +166,9 @@ class Column(list):
 
         run_length = 1
         # Start with the second to last card and step backwards
-        for prior_card in self[-2::-1]:
-            if not prior_card.can_cascade(card):
+        while True:
+            prior_card = self.get_card_from_top(run_length)
+            if not prior_card or not prior_card.can_cascade(card):
                 break
             run_length += 1
             card = prior_card
@@ -316,7 +319,7 @@ class Board:
         dst_column = self.get_dst_column(dst, card)
 
         if dst_column is not None \
-            and dst_column.can_move_cards(src_column, max_supermove_size):
+            and dst_column.can_accept_column(src_column, max_supermove_size):
 
             dst_column.add_cards_from_column(src_column, max_supermove_size)
 
