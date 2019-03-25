@@ -153,7 +153,7 @@ class Column(list):
                 return i
         return 0
 
-    # How many cards in a row does this column end with?
+    # How many cards in a row could we move from this column?
     def get_final_run_length(self):
         if not self.cascade:
             # This causes any move from a home cell to 
@@ -182,8 +182,8 @@ class Column(list):
         if len(self) > depth:
             return self[-1-depth]
 
-# A ColumnGroup is a unifying container for the tableau, frees 
-# and homes collections of columns.
+# A ColumnGroup is a unifying container for the 3 groups 
+# of columns (the tableau, the freecells and the homes).
 # The constructor takes a list of columns.
 
 class ColumnGroup(list):
