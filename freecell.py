@@ -233,8 +233,7 @@ class BoardSnapshot:
         board.move_counter = self.move_counter
 
 # An exception thrown on illegal user moves
-class MoveException(Exception):
-    pass
+class MoveException(Exception): pass
 
 FreeCellNames = 'abcd'
 TableauNames = '12345678'
