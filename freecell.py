@@ -2,7 +2,32 @@
 
 # This generates MS compatible Freecell deals and plays back solutions.
 
-# E. Woudenberg CC BY-SA 2019 (prompted by interest from Lawrence E. Bakst)
+# CC BY-SA 2019 E. Woudenberg (prompted by interest from Lawrence E. Bakst)
+
+'''
+(Freecell Game Details from Wikipedia)
+
+Construction and layout
+
+- One standard 52-card deck is used.
+- There are four open cells and four open foundations. Some alternate rules use between one and ten cells.
+= Cards are dealt face-up into eight cascades, four of which comprise seven cards each and four of which 
+  comprise six cards each. Some alternate rules will use between four and ten cascades.
+
+Building during play
+
+- The top card of each cascade begins a tableau.
+- Tableaux must be built down by alternating colors.
+- Foundations are built up by suit.
+
+Moves
+- Any cell card or top card of any cascade may be moved to build on a tableau, 
+  or moved to an empty cell, an empty cascade, or its foundation.
+- Complete or partial tableaus may be moved to build on existing tableaus, 
+  or moved to empty cascades, by recursively placing and removing cards through 
+  intermediate locations. Computer implementations often show this motion, but players using 
+  physical decks typically move the tableau at once.
+'''
 
 import random
 import ansi
@@ -406,7 +431,7 @@ def main():
 
     BoardLog = open('cell.log', 'w')
 
-    printer = TTY()
+    printer = LinePrinter()
     board = Board(seed=10913, printer=printer)
     board.print()
 
@@ -442,6 +467,8 @@ def main():
             printer.print_footer(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.move(move)
             board.print()
+            
+    printer.flush()
         
 if __name__ == '__main__':
     print('Type "./freecell.py test" to run with the builtin test dataset')
