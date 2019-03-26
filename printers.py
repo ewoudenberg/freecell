@@ -49,9 +49,6 @@ def get_printing_length(line):
     return len(Ansi_escape.sub('', line))
 
 class Block(list): 
-    def __init__(self, *args, **kwargs):
-        list.__init__(self, *args, **kwargs)
-
     def finalize(self):
         self.rows = len(self)
         self.cols = max(get_printing_length(i) for i in self)
