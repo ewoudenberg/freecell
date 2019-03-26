@@ -78,13 +78,15 @@ class Card:
     def __repr__(self): # for debugging
         return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
     
+Infinite = float('Inf')
+
 # Columns are used to implement free cells, suit homes, and cascades in the tableau.
 
 class Column(list):
     def __init__(self, type=None, location=''):
         type_configurations = dict(FREECELL=dict(max_length=1, cascade=True),
-                                   HOME=dict(max_length=float('Inf'), cascade=False),
-                                   TABLEAU=dict(max_length=float('Inf'), cascade=True))
+                                   HOME=dict(max_length=Infinite, cascade=False),
+                                   TABLEAU=dict(max_length=Infinite, cascade=True))
 
         if type not in type_configurations:
             raise Exception(f'Column __init__ botch: unknown type "{type}"')
