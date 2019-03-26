@@ -88,8 +88,8 @@ class Card:
         self.rank = CardRanks[self.rank_index]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
-    # Can the new_card be on top of us (next lower rank, opposite color) in a cascade?
-    def can_cascade(self, new_card):
+    # Can the new_card be on top of us (next lower rank, opposite color) in a tableau?
+    def can_tableau(self, new_card):
         return self.color != new_card.color and self.rank_index - 1 == new_card.rank_index
 
     # Can the new card be on top of us (next higher rank, same suit) in homes?
@@ -150,7 +150,7 @@ class Column(list):
         if self.cascade:
             if not top_card:
                 return True
-            return top_card.can_cascade(new_card)
+            return top_card.can_tableau(new_card)
 
         else:
             if not top_card:
@@ -184,7 +184,7 @@ class Column(list):
             # From how deep do the cards cascade?
             while True:
                 deeper_card = self.peek_card_from_top(run_length)
-                if not deeper_card or not deeper_card.can_cascade(top_card):
+                if not deeper_card or not deeper_card.can_tableau(top_card):
                     break
                 top_card = deeper_card
                 run_length += 1
@@ -326,7 +326,7 @@ class Board:
         return success
 
     # This moves cards between locations (cascades, frees, homes), attempting 
-    # to move as many valid cards as it can on cascades-to-cascades moves.
+    # to move as many valid cards as it can on cascade-to-cascade moves.
     # The "move" parameter is a two character string: <source><destination>
     # where <source> can be 1-8 (the cascades), a-d (the frees) and <destination>
     # can be all the source locations plus h (homes).
@@ -378,7 +378,7 @@ class Board:
         if card.rank_index > CardRanks.index("2"):
             for column in self.cascades + self.frees:
                 for board_card in column:
-                    if card.can_cascade(board_card):
+                    if card.can_tableau(board_card):
                         return True
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
