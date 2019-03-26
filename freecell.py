@@ -34,9 +34,8 @@ import ansi
 import math
 import copy
 import sys
-from io import StringIO
 
-from printers import TTY, LinePrinter
+from printers import TTY, LinePrinter, PrinterSheet
 
 # Create a deck of cards
 
@@ -226,27 +225,7 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(column) for column in self)
 
-class PrinterSheet:
-    def __init__(self):
-        self.output_file = StringIO()
 
-    def print(self, *args, **kwargs):
-        print(*args, **kwargs, file=self.output_file)
-
-    def printcard(self, card):
-        chars = ansi.bg.green
-        if card:
-            chars += card.as_string()
-        else:
-            chars += '   '
-        chars += ansi.bg.black
-        print(chars, end='', file=self.output_file)
-
-    def output(self):
-        print(self.output_file.getvalue(), end='')
-
-    def get_lines(self):
-        return self.output_file.getvalue().splitlines()
 
 class BoardSnapshot:
     def __init__(self, board):
@@ -416,7 +395,7 @@ class Board:
             sheet.print(f'{i}  ', end='')
         sheet.print()
 
-        self.printer.print_lines(sheet.get_lines())
+        self.printer.print_sheet(sheet)
 
 Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 
@@ -440,13 +419,14 @@ def main():
         # Try using any supplied input first
         move = lines and lines.pop(0).strip()
         if move:
-            printer.print_footer(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
+            printer.print_header(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
 
         # If that's exhausted, ask for manual input
         else:
-            printer.print_footer(f'{ansi.fg.green}# {board.move_counter}. manual-move: {ansi.reset}', end='')
             printer.flush()
+            print('your move? ', end='')
             move = input()
+            printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
 
         BoardLog.write(move+'\n')
 
@@ -464,8 +444,8 @@ def main():
         board.print()
 
         for move in board.automatic_moves():
-            printer.print_footer(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.move(move)
+            printer.print_header(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.print()
 
     printer.flush()

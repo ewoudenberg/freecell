@@ -3,6 +3,30 @@
 import sys
 import re
 import os
+import ansi
+from io import StringIO
+
+class PrinterSheet:
+    def __init__(self):
+        self.output_file = StringIO()
+
+    def print(self, *args, **kwargs):
+        print(*args, **kwargs, file=self.output_file)
+
+    def printcard(self, card):
+        chars = ansi.bg.green
+        if card:
+            chars += card.as_string()
+        else:
+            chars += '   '
+        chars += ansi.bg.black
+        print(chars, end='', file=self.output_file)
+
+    def output(self):
+        print(self.output_file.getvalue(), end='')
+
+    def get_lines(self):
+        return self.output_file.getvalue().splitlines()
 
 class TTY:
     def flush(self): pass
@@ -10,7 +34,7 @@ class TTY:
     def print_lines(self, lines):
         sys.stdout.write('\n'.join(lines)+'\n')
 
-    def print_footer(self, *args, **kwargs):
+    def print_header(self, *args, **kwargs):
         print(*args, **kwargs)
         if 'end' not in kwargs:
             print()
@@ -44,18 +68,24 @@ class LinePrinter:
         self.rows, self.cols = get_terminal_size()
         self.current_block = Block()
         self.blocks = []
+        self.header = []
 
     def print_lines(self, lines):
         self.current_block.extend(lines)
 
-    def print_footer(self, *args, **kwargs):
-        self.current_block.extend(args)
+    def print_sheet(self, sheet: PrinterSheet):
+        self.current_block.extend(sheet.get_lines())
         self.end_block()
 
+    def print_header(self, *args, **kwargs):
+        self.header.extend(args)
+
     def end_block(self):
+        self.current_block[0:0] = self.header or [' ']
         self.current_block.finalize()
         self.blocks.append(self.current_block)
         self.current_block = Block()
+        self.header = []
 
     def flush(self):
         while True:
