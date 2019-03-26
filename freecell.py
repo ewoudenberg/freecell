@@ -16,17 +16,17 @@ Construction and layout
 
 Building during play
 
-- The top card of each cascade begins a tableau.
+- The top card of each cascade begins a cascades.
 - Tableaux must be built down by alternating colors.
 - Foundations are built up by suit.
 
 Moves
-- Any cell card or top card of any cascade may be moved to build on a tableau, 
+- Any cell card or top card of any cascade may be moved to build on a cascades, 
   or moved to an empty cell, an empty cascade, or its foundation.
 - Complete or partial tableaus may be moved to build on existing tableaus, 
   or moved to empty cascades, by recursively placing and removing cards through 
   intermediate locations. Computer implementations often show this motion, but players using 
-  physical decks typically move the tableau at once.
+  physical decks typically move the cascades at once.
 '''
 
 import random
@@ -108,13 +108,13 @@ class Card:
     
 Infinite = float('Inf')
 
-# Columns are used to implement free cells, suit homes, and cascades in the tableau.
+# Columns are used to implement the free cells, suit foundations ("homes"), and cascades.
 
 class Column(list):
     def __init__(self, type=None, location=''):
         type_configurations = dict(FREECELL=dict(cascade=True, max_length=1),
                                    HOME=dict(cascade=False, max_length=Infinite),
-                                   TABLEAU=dict(cascade=True, max_length=Infinite))
+                                   CASCADE=dict(cascade=True, max_length=Infinite))
 
         if type not in type_configurations:
             raise Exception(f'Column __init__ botch: unknown type "{type}"')
@@ -207,7 +207,7 @@ class Column(list):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_from_top()}'
     
 # A ColumnGroup is a unifying container for the 3 groups 
-# of columns (the tableau, the freecells and the homes).
+# of columns (the cascades, the freecells and the homes).
 # The constructor takes a list of columns.
 
 class ColumnGroup(list):
@@ -251,13 +251,13 @@ class PrinterSheet:
 class BoardSnapshot:
     def __init__(self, board):
         self.frees = copy.deepcopy(board.frees)
-        self.tableau = copy.deepcopy(board.tableau)
+        self.cascades = copy.deepcopy(board.cascades)
         self.homes = copy.deepcopy(board.homes)
         self.move_counter = board.move_counter
 
     def restore(self, board):
         board.frees = self.frees
-        board.tableau  = self.tableau
+        board.cascades  = self.cascades
         board.homes = self.homes
         board.move_counter = self.move_counter
 
@@ -265,30 +265,30 @@ class BoardSnapshot:
 class MoveException(Exception): pass
 
 FreeCellNames = 'abcd'
-TableauNames = '12345678'
+CascadeNames = '12345678'
 
 class Board:
     def __init__(self, seed, printer=TTY()
     ):
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in CardGlyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
-        self.tableau = ColumnGroup(Column(type='TABLEAU', location=i) for i in TableauNames)
+        self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in CascadeNames)
         self.move_counter = 0
         self.history = []
         self.printer = printer
 
-        # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
+        # Go round-robin, placing cards from the shuffled deck in each column of the cascades.
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
-            self.tableau[i % len(self.tableau)].add_card_from_dealer(card)
+            self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
 
     def is_empty(self):
-        columns_in_use = sum(1 for i in self.frees + self.tableau if i)
+        columns_in_use = sum(1 for i in self.frees + self.cascades if i)
         return columns_in_use == 0
 
     # Find the correct column for the given source location.
     def get_src_column(self, location):
-        for group in self.frees, self.tableau:
+        for group in self.frees, self.cascades:
             column = group.get_column_for_location(location)
             if column is not None:
                 return column
@@ -325,10 +325,10 @@ class Board:
 
         return success
 
-    # This moves cards between locations (tableau, frees, homes), attempting 
-    # to move as many valid cards as it can on tableau-to-tableau moves.
+    # This moves cards between locations (cascades, frees, homes), attempting 
+    # to move as many valid cards as it can on cascades-to-cascades moves.
     # The "move" parameter is a two character string: <source><destination>
-    # where <source> can be 1-8 (the tableau), a-d (the frees) and <destination>
+    # where <source> can be 1-8 (the cascades), a-d (the frees) and <destination>
     # can be all the source locations plus h (homes).
     def compound_move(self, move):
         if len(move) != 2:
@@ -354,12 +354,12 @@ class Board:
         else:
             raise MoveException(f'Illegal move {move}')
 
-    # Hunt for cards on top of the tableau columns and in free cells that can
-    # be moved home (unless there are other cards on the tableau that could cascade 
+    # Hunt for cards on top of the cascades columns and in free cells that can
+    # be moved home (unless there are other cards on the cascades that could cascade 
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
-            for src_column in self.tableau + self.frees:
+            for src_column in self.cascades + self.frees:
                 card = src_column.peek_card_from_top()
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
@@ -376,7 +376,7 @@ class Board:
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # another card because they move directly to home.
         if card.rank_index > CardRanks.index("2"):
-            for column in self.tableau + self.frees:
+            for column in self.cascades + self.frees:
                 for board_card in column:
                     if card.can_cascade(board_card):
                         return True
@@ -385,7 +385,7 @@ class Board:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
     def get_max_supermove_size(self):
         empty_frees = sum(1 for i in self.frees if not i)
-        empty_columns = sum(1 for i in self.tableau if not i)
+        empty_columns = sum(1 for i in self.cascades if not i)
         # Must be some error in the formula -- I had to add max of (empty_frees+1) to it.
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
@@ -405,8 +405,8 @@ class Board:
             sheet.printcard(i.peek_card_from_top())
         sheet.print()
 
-        for row in range(self.tableau.get_row_count()):
-            for col in self.tableau: 
+        for row in range(self.cascades.get_row_count()):
+            for col in self.cascades: 
                 sheet.printcard(col.peek_card_from_row(row))
             sheet.print()
 
