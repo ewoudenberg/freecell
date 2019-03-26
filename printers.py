@@ -28,6 +28,8 @@ class PrinterSheet:
     def get_lines(self):
         return self.output_file.getvalue().splitlines()
 
+# TTY prints freecell board sheets in a normal scrolling terminal-like manner.
+
 class TTY:
     def flush(self): pass
 
@@ -65,6 +67,10 @@ def get_terminal_size():
     rows_cols = os.popen('stty size', 'r').read().split()
     return (int(i) for i in rows_cols)
 
+# LinePrinter prints freecell board sheets horiziontally, fitting as many
+# as possible within the terminal window before moving to
+# the next row.
+
 class LinePrinter:
     def __init__(self):
         self.rows, self.cols = get_terminal_size()
@@ -83,7 +89,7 @@ class LinePrinter:
         self.header.extend(args)
 
     def end_block(self):
-        self.current_block[0:0] = self.header or [' ']
+        self.current_block[0:0] = self.header or [''] # 'or' provide an empty header
         self.current_block.finalize()
         self.blocks.append(self.current_block)
         self.current_block = Block()
