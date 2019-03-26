@@ -410,7 +410,7 @@ def main():
 
     BoardLog = open('cell.log', 'w')
 
-    printer = LinePrinter()
+    printer = TTY() # LinePrinter()
     board = Board(seed=10913, printer=printer)
     board.print()
 

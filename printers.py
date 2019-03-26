@@ -34,10 +34,12 @@ class TTY:
     def print_lines(self, lines):
         sys.stdout.write('\n'.join(lines)+'\n')
 
+    def print_sheet(self, sheet: PrinterSheet):
+        self.print_lines(sheet.get_lines())
+
     def print_header(self, *args, **kwargs):
+        print()
         print(*args, **kwargs)
-        if 'end' not in kwargs:
-            print()
         
 Ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
