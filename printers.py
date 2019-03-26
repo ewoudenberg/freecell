@@ -120,6 +120,5 @@ class LinePrinter:
                 print(block.get_row(row) + ' '*MARGIN, end='')
             print()
         print()
-        print()
 
 
