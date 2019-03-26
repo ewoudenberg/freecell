@@ -2,7 +2,7 @@
 
 import sys
 import re
-from get_terminal_size import get_terminal_size
+import os
 
 class TTY:
     def flush(self): pass
@@ -35,9 +35,13 @@ class Block(list):
 
 MARGIN = 2 # 2 columns between blocks
 
+def get_terminal_size():
+    rows_cols = os.popen('stty size', 'r').read().split()
+    return (int(i) for i in rows_cols)
+
 class LinePrinter:
     def __init__(self):
-        self.cols, self.rows = get_terminal_size()
+        self.rows, self.cols = get_terminal_size()
         self.current_block = Block()
         self.blocks = []
 
