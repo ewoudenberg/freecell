@@ -165,8 +165,8 @@ class Column(list):
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
-        src_run_length = src_column.get_final_run_length()
-        max_cards = min(supermove_room, src_run_length, self.max_length-len(self))
+        src_removable_cards = src_column.get_removable_amount()
+        max_cards = min(supermove_room, src_removable_cards, self.max_length-len(self))
         # Loop through possible xfers (trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the string).
         for i in range(max_cards, 0, -1):
@@ -175,8 +175,8 @@ class Column(list):
                 return i
         return 0
 
-    # How many cards in a row could we move from this column?
-    def get_final_run_length(self):
+    # How many cards in a row could we remove from this column?
+    def get_removable_amount(self):
         run_length = 0
         top_card = self.peek_card_from_top()
         if top_card:
@@ -374,7 +374,7 @@ class Board:
     # that card could become orphaned if it loses this card as a parent.
     def is_card_needed(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
-        # another card because they move directly to home.
+        # 2s because they move directly to home. Someone told me we can also ignore 2s.
         if card.rank_index > CardRanks.index("2"):
             for column in self.cascades + self.frees:
                 for board_card in column:
