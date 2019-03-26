@@ -22,9 +22,6 @@ class PrinterSheet:
         chars += ansi.bg.black
         print(chars, end='', file=self.output_file)
 
-    def output(self):
-        print(self.output_file.getvalue(), end='')
-
     def get_lines(self):
         return self.output_file.getvalue().splitlines()
 
