@@ -84,16 +84,16 @@ Infinite = float('Inf')
 
 class Column(list):
     def __init__(self, type=None, location=''):
-        type_configurations = dict(FREECELL=dict(max_length=1, cascade=True),
-                                   HOME=dict(max_length=Infinite, cascade=False),
-                                   TABLEAU=dict(max_length=Infinite, cascade=True))
+        type_configurations = dict(FREECELL=dict(cascade=True, max_length=1),
+                                   HOME=dict(cascade=False, max_length=Infinite),
+                                   TABLEAU=dict(cascade=True, max_length=Infinite))
 
         if type not in type_configurations:
             raise Exception(f'Column __init__ botch: unknown type "{type}"')
                         
-        self.__dict__.update(type_configurations[type])
         self.location = location
         self.type = type
+        self.__dict__.update(type_configurations[type])
 
     def add_card(self, card):
         if not self.can_accept_card(card):
