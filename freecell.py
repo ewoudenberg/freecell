@@ -437,7 +437,7 @@ def main():
 
     while not board.is_empty():
 
-        # Try getting supplied input first
+        # Try using any supplied input first
         move = lines and lines.pop(0).strip()
         if move:
             printer.print_footer(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
@@ -467,7 +467,7 @@ def main():
             printer.print_footer(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.move(move)
             board.print()
-            
+
     printer.flush()
         
 if __name__ == '__main__':
