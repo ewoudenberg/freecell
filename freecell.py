@@ -8,7 +8,10 @@ import random
 import ansi
 import math
 import copy
+import sys
 from io import StringIO
+
+from printers import TTY, LinePrinter
 
 # Create a deck of cards
 
@@ -198,8 +201,6 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(column) for column in self)
 
-# Someday this will be used to print multiple 
-# boards horizontally across the screen.
 class PrinterSheet:
     def __init__(self):
         self.output_file = StringIO()
@@ -218,6 +219,9 @@ class PrinterSheet:
 
     def output(self):
         print(self.output_file.getvalue(), end='')
+
+    def get_lines(self):
+        return self.output_file.getvalue().splitlines()
 
 class BoardSnapshot:
     def __init__(self, board):
@@ -239,12 +243,14 @@ FreeCellNames = 'abcd'
 TableauNames = '12345678'
 
 class Board:
-    def __init__(self, seed):
+    def __init__(self, seed, printer=TTY()
+    ):
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in CardGlyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
         self.tableau = ColumnGroup(Column(type='TABLEAU', location=i) for i in TableauNames)
         self.move_counter = 0
         self.history = []
+        self.printer = printer
 
         # Go round-robin, placing cards from the shuffled deck in each column of the tableau.
         deck = GetShuffledDeck(seed)
@@ -385,10 +391,7 @@ class Board:
             sheet.print(f'{i}  ', end='')
         sheet.print()
 
-        sheet.output()
-
-
-import sys
+        self.printer.print_lines(sheet.get_lines())
 
 Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 
@@ -403,7 +406,8 @@ def main():
 
     BoardLog = open('cell.log', 'w')
 
-    board = Board(seed=10913)
+    printer = TTY()
+    board = Board(seed=10913, printer=printer)
     board.print()
 
     while not board.is_empty():
@@ -411,11 +415,12 @@ def main():
         # Try getting supplied input first
         move = lines and lines.pop(0).strip()
         if move:
-            print(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
+            printer.print_footer(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
 
         # If that's exhausted, ask for manual input
         else:
-            print(f'{ansi.fg.green}# {board.move_counter}. manual-move: {ansi.reset}', end='')
+            printer.print_footer(f'{ansi.fg.green}# {board.move_counter}. manual-move: {ansi.reset}', end='')
+            printer.flush()
             move = input()
 
         BoardLog.write(move+'\n')
@@ -434,7 +439,7 @@ def main():
         board.print()
 
         for move in board.automatic_moves():
-            print(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
+            printer.print_footer(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
             board.move(move)
             board.print()
         
