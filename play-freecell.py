@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# User interface to the Freecell game engine
+
 import sys
 import ansi
 

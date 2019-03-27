@@ -33,7 +33,6 @@ import random
 import ansi
 import math
 import copy
-import sys
 
 from printers import TTY, LinePrinter, PrinterSheet
 
