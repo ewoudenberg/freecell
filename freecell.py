@@ -320,10 +320,11 @@ class Board:
             raise UserException(f'No card at {src}')
 
         dst_column = self.get_dst_column(dst, card)
+        if dst_column is None:
+            raise UserException(f'Illegal move {move}')
+
         max_supermove_size = self.get_max_supermove_size()
-        
-        if dst_column is None \
-            or not dst_column.can_accept_column(src_column, max_supermove_size):
+        if not dst_column.can_accept_column(src_column, max_supermove_size):
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, max_supermove_size)
