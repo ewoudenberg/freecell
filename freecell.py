@@ -246,8 +246,7 @@ FreeCellNames = 'abcd'
 CascadeNames = '12345678'
 
 class Board:
-    def __init__(self, seed, printer=TTY()
-    ):
+    def __init__(self, seed, printer=TTY()):
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in CascadeNames)

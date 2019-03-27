@@ -5,82 +5,76 @@
 import random
 import ansi
 
+def printf(str, *args):
+    print(str % args, end='')
+
 # cards are numbered 1-52, so zero is an error.
-# My preferece would be that cards are in suit order so 1-13 are Ace of Hearts thru King of Hearts.
-# However, MS uses card order so I decided to go with that to avoid a mapping layer.
-# if a card is negative it's facedown, not used for Freecell but needed for Klondike.
-
-#new system
+# cards have 3 attributes, rank (0-12), suit (0-3) and color (True if red, False if black).
+# MS uses value ordering, so the first 4 cards are A♣, A♦, A♥, A♠
+# I prefer rank ordering but I decided to go with MS.
+# if a card is negative it's facedown, not used for Freecell, but needed for Klondike.
 CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
-MSRankNames = ["C", "D", "H", "S"]
-MSRankGlyphs = ["♣", "♦", "♥", "♠"]
-rankmap = [0, 1, 2, 3]
-max = 52
-
-# old system
-#RankNames = ["Heart", "Diamond", "Spade", "Club"]
-#ShortRankNames = ["H", "D", "S", "C"]
-#Colors = ["Red", "Red", "Black", "Black"]
-
-# Create a deck of cards
-def NewDeck(n=max):
-    return [x for x in range(1, n+1)]
-
-def value(card):
-    return (card - 1) // 4
+LongRankNames = ["Club", "Diamond", "Heart", "Spade"]
+MSSuitNames = ["C", "D", "H", "S"]
+MSSuitGlyphs = ["♣", "♦", "♥", "♠"]
+FreeCellNames =  ["a", "b", "c", "d"]
 
 def rank(card):
+    return (card - 1) // 4
+
+def suit(card):
     return (card - 1) % 4
 
 # true if red
 def color(card):
-    return rank(card) == 1 or rank(card) == 2
+    return suit(card) == 1 or suit(card) == 2
 
-def MSRedCard(card):
-    card -= 1
-    suit = card % 4
-    if suit == 1 or suit == 2:
-        return True
-    return False
+def isRedCard(card):
+    return suit(card) == 1 or suit(card) == 2
 
-def MSCardName(card, glyph=True):
-    card -= 1
-    suit = card % 4
-    val = card // 4
+def CardName(card, glyph=True):
+    if card <= 0:
+        return "  "
     if glyph:
-        return CardNames[val] + MSRankGlyphs[suit]
+        return CardNames[rank(card)] + MSSuitGlyphs[suit(card)]
     else:
-        return CardNames[val] + MSRankNames[suit]
-
-
-# MS suit ordering is club, diamond, heart, spade
-# I don't think they knew that suits have an order
-def convertToMS(card):
-    card -= 1
-    offset = [39, 13, 0, 26]
-    suit = card % 4
-    val = card // 4
-    return offset[suit] + val + 1
+        return CardNames[rank(card)] + MSSuitNames[suit(card)]
 
 #print an ANSI sequence that sets the card color
-def CardColor(card):
-    if MSRedCard(card):
-        print(ansi.fg.red, end='')
+def ColorCard(card, used=True):
+    if not used: return ""
+    if isRedCard(card):
+        return ansi.Fg.red
     else:
-        print(ansi.fg.black, end='')
+        return ansi.Fg.black
 
+def isDigit(str):
+    return str >= "1" and str <= "8"
+
+def isHome(str):
+    return str == "h"
+
+def isFreeCell(str):
+    return str >= "a" and str <= "d"
+
+def isValidSyntax(m):
+    return len(m) == 2 and (isDigit(m[0]) or isHome(m[0]) or isFreeCell(m[0])) and (isDigit(m[1]) or isHome(m[1]) or isFreeCell(m[1]))
+
+# parse a move which is a two character string into a column, index, and home
 # Returns a tuple(colum, index, home) that describes the from or to of a move
+# fix the 4
+# move to FeeeCell class
+# talk with rick about home = l == "h"
+# talk with rick about not genning up a return value
 def GetCIH(l):
-    col = -1
-    idx = -1
-    home = False
+    col, idx, home = -1, -1, False
     if l >= "1" and l <= "8":
-        col = int(l)
+        col = int(l) - 1
     elif l >= "a" and l <= "d":
-        col = 0
-        idx = ord(l) - 97 + 4
+        col = -1
+        idx = ord(l) - ord("a")
     elif l == "h":
-        home = True
+        home = True # home = l == "h"
     return (col, idx, home)
 
 # Suposedly MS compiler runtime compatible version of rand
@@ -95,222 +89,313 @@ def rand():
     state = ((214013 * state) + 2531011) % 2147483648 # mod 2^31
     return  state // 65536
 
-# Knuth-Fisher-Yates shuffle algorithm should be non-biased
-# google biased shuffle
-# https://blog.codinghorror.com/the-danger-of-naivete/
-# https://stackoverflow.com/questions/859253/why-does-this-simple-shuffle-algorithm-produce-biased-results-what-is-a-simple
-# currently not really used as the ms compatible code does it a different way during the deal
-def Shuffle(deck):
-    for i in range(len(deck) - 1, 0, -1):
-        card = random.randint(0, i)
-        deck[i], deck[card] = deck[card], deck[i]
-
-# code to implement a FreeCellGame
-class FreeCellGame:
+# A deck of cards implemented as a list. The only things you can do are Take() and Shuffle().
+class Deck(list):
     def __init__(self):
-        self.cols = 9
-        self.rows = 21
-        self.freecells = 4
-        self.freetabs = 0
+        self.deck = list(range(1, 53)) # [x for x in range(1, n+1)]
 
-# Generate a new Freecell game and set up the board, game 5 is easy so it's the default
-# Conceptuall board is 8 columns x as many rows are needed, a maxiumum of 21 (13+8) I believe.
-# In fact the board here is 9 columns because the top row is implemented as column 0.
-# The top row contains the 4 foundations in rows 0-4, and the 4 freecells in rows 4-8.
-# In each of the 8 rows of column 0 there is a list where cards are placed ussing append().
-# All the other columns, which are the cascaeds, have just a single list where we do pop() and append.
-    def NewGame(self, game=5):
-        self.Board = [[-1 for j in range(self.rows)] for i in range(self.cols)]
-        self.Board[0] = [[] for i in range(8)]
-        #print(self.Board) 
-        deck = NewDeck()
-        # Shuffle(deck)
-        left = 52
-        #print(game)
+    def Take(self):
+        return(self.deck.pop())
+
+    def Peek(self, i=-1):
+        return(self.deck[i])
+
+    # Knuth-Fisher-Yates shuffle algorithm should be non-biased
+    # google biased shuffle
+    # https://blog.codinghorror.com/the-danger-of-naivete/
+    # https://stackoverflow.com/questions/859253/why-does-this-simple-shuffle-algorithm-produce-biased-results-what-is-a-simple
+    # currently not used as the MS compatible code shuffeling during the deal
+    def Shuffle(deck):
+        __init__(self)
+        for i in range(len(deck) - 1, 0, -1):
+            card = random.randint(0, i)
+            self.deck[i], self.deck[card] = self.deck[card], self.deck[i]
+
+    # This is the way that MS shuffles cards, assumes cards are dealt a certain way
+    # as we do in Setup()
+    def MSShuffle(game):
         srand(game)
+        left = len(self.deck)
+        tmp = Deck()
         for i in range(52):
             idx = rand() % left
-            card = deck[idx]
+            card = tmp[idx]
             left -= 1
-            deck[idx] = deck[left]
-            #print(MSCardName(card-1), " ", end='')
-            self.Board[(i%8)+1][i//8] = card
+            tmp[idx] = tmp[left]
+            #print(CardName(card-1), " ", end='')
+            #self.tableau[(i%8)+1][i//8] = card
+            self.deck.append(card)
             #print(CardName(c) + " ", end='')
-        #print(self.Board)
-        #remove -1 filler now
-        for i in range(self.cols):
-            while len(self.Board[i]) > 0:
-                if (self.Board[i][len(self.Board[i])-1]) == -1:
-                    self.Board[i].pop()
-                else:
-                    break
 
-    # print the board in the standard way
-    def PrintBoard(self):
-        for i in range(8):
-            if len(self.Board[0][i]) > 0:
-                card = self.Board[0][i][-1]
-                print(MSCardName(card, False) + " ", end='')
-            else:
-                print("   ", end='')
-        print()
+# A pile of cards implmented as a list.
+class Pile(list):
+    def __init__(self, kind):
+        if not kind in ["tableau", "freecell", "foundation"]:
+            raise("Pile: invalid kind")
+        self.kind = kind
 
-        j  = 0
-        pcnt = 0
-        while True:
-            for i in range(1, self.cols):
-                if j < len(self.Board[i]):
-                    card = self.Board[i][j]
-                    print(MSCardName(card, False) + " ", end='')
-                    pcnt += 1
-                else:
-                    print("   ", end='')
-            print()
-            j += 1
-            if pcnt == 0:
-                break
-            pcnt = 0
+    def isEmpty(self):
+        return(len(self) == 0)
 
-    # print the board using color and glyphs
-    def PrintFancyBoard(self):
-        # the top row of freecells and foundations piles is stored in column 0
-        print(ansi.bg.green, end='')
-        for i in [4, 5, 6, 7, 0, 1, 2, 3]:
-            if len(self.Board[0][i]) > 0:
-                card = self.Board[0][i][-1]
-                CardColor(card)
-                print(MSCardName(card) + " ", end='')
-            else:
-                print("   ", end='')
-        print(ansi.bg.black, end='')
-        print()
+    def Put(self, card):
+        self.append(card)
 
-        # print the cascades
-        j  = 0
-        pcnt = 0
-        while True:
-            print(ansi.bg.green, end='')
-            for i in range(1, self.cols):
-                if j < len(self.Board[i]):
-                    card = self.Board[i][j]
-                    CardColor(card)
-                    print(MSCardName(card) + " ", end='')
-                    pcnt += 1
-                else:
-                    print("   ", end='')
-            print(ansi.bg.black, end='')
-            print()
-            j += 1
-            if pcnt == 0:
-                break
-            pcnt = 0
-        print()
-        print(ansi.reset, end='')
+    def Take(self):
+        return(self.pop())
 
-    # move a single card, no auto, no compund, no super moves
-    # the move is in "standard notation"
-    # NB doesn't yet check validity of the move
-    def move(self, m):
-        fcih = GetCIH(m[0])
-        tcih = GetCIH(m[1])
-        if tcih[2]: # special case, move a card to it's foundation home
-            card = self.Board[fcih[0]][-1]
-            v, r, c = value(card), rank(card), color(card)
-            card = self.Board[fcih[0]].pop()
-            self.Board[0][rankmap[r]].append(card)
-        else:
-            #print(fcih)
-            #print(tcih)
-            #get from card
-            if fcih[1] > -1:
-                card = self.Board[0][fcih[1]].pop()
-                self.freecells += 1
-            else:
-                card = self.Board[fcih[0]].pop()
-                if len(self.Board[fcih[0]]) == 0:
-                    self.freetabs += 1
-            # put card in new location
-            if tcih[1] > -1:
-                self.Board[0][tcih[1]].append(card)
-                self.freecells -= 1
-            else:
-                if len(self.Board[tcih[0]]) == 0:
-                    self.freetabs -= 1
-                self.Board[tcih[0]].append(card)
+    def Count(self):
+        return(len(self))
 
-    # move cnt cards from and to the locations specified by m
-    def cmove(self, m, cnt):
-        if cnt == 1:
-            self.move(m)
-        else:
-            fcih = GetCIH(m[0])
-            tcih = GetCIH(m[1])
-            cards = self.Board[fcih[0]][::-1][0:cnt]
-            #print("cards", cards)
-            self.Board[tcih[0]].extend(cards[::-1])
-            for i in range(cnt):
-                self.Board[fcih[0]].pop()
+    def TopCard(self):
+        if len(self) == 0:
+            return 0
+        return(self[::-1][0])
 
-    # see if more than one card can be moves from the supplied col
-    # returns the count of cards that can be moved
-    # bug needs to respect freecells available. FIX FIX FIX
-    # also doesn't do supermoves yet. FIX FIX FIX
-    def compoundMove(self, m, freecells, freepiles):
-        if m[0] < "1" and m[0] > "8":
-            return 1
-        col = int(m[0])
-        #print("compoundMove", col, freecells, freepiles)
-        lst = self.Board[col][::-1]
-        #print(lst)
+    def Move(self, to, cnt):
+        rev = self[::-1][0:cnt]
+        to.extend(rev[::-1])
+        for i in range(cnt):
+            self.Take()
+
+    def OrderedCards(self):
+        lst = self[::-1]
         l = len(lst)
+        #print(l, lst)
         cnt = 0
         for card in lst:
             if l > 1:
                 card2 = lst[cnt + 1]
-                if value(card2) == value(card) + 1 and color(card2) != color(card):
+                if rank(card2) == rank(card) + 1 and color(card2) != color(card):
                     cnt += 1
                     l -= 1
                     continue
                 else:
                     break
-        return cnt+1
+        l2 = lst[:cnt+1]
+        #print(cnt+1, l2)
+        return l2
+
+    def NumOrderedCards(self):
+        oc = self.OrderedCards()
+        #print(oc)
+        return len(oc)
+
+    def MatchingCards(self, topCard):
+        oc = self.OrderedCards()
+        if topCard == 0:
+            return len(oc)
+        cnt = 1
+        for card in oc:
+            if rank(topCard) == rank(card) + 1 and color(topCard) != color(card):
+                break
+            cnt += 1
+        #print("MatchingCards: ", cnt, topCard, oc)
+        return cnt
+
+# The board of a Freecell game.
+class FreeCellBoard():
+    def __init__(self, ntableau, nfreecells, nfoundations):
+        self.tableau = [Pile("tableau") for p in range(ntableau)]
+        self.freecells = [Pile("freecell") for p in range(nfreecells)]
+        self.foundations = [Pile("foundation") for p in range(nfoundations)]
+        self.freecellcnt = 4
+        self.freetabcnt = 0
+
+    def longestCol(self):
+        return max([len(l) for l in self.tableau])
+
+    def pad(self, col, padlen):
+        c = list(col)
+        for i in range(padlen - len(c)):
+            c.append("   ")
+        return c
+
+    def Setup(self, game):
+        left = 52
+        n = 52
+        srand(game)
+        deck = list(range(1, n+1))
+        for i in range(52):
+            idx = rand() % left
+            card = deck[idx]
+            left -= 1
+            deck[idx] = deck[left]
+            #print(CardName(card-1), " ", end='')
+            #self.tableau[(i%8)+1][i//8] = card
+            self.tableau[(i%8)].Put(card)
+            #print(CardName(c) + " ", end='')
+
+
+    def TableauCardNamesInRows(self, fancy=False):
+        lcl = self.longestCol()
+        cols = []
+        for pile in self.tableau:
+            col = []
+            for card in pile:
+                col.append(ColorCard(card, fancy) + CardName(card)+" ")
+            cols.append(self.pad(col, lcl))
+        # transpose the cols into rows
+        rows = [''.join(chars) for chars in zip(*cols)]
+        return rows
+
+    def PrintBoard(self):
+        str = ""
+        for deck in self.freecells:
+            str += CardName(deck.TopCard())+" "
+        for deck in self.foundations:
+            str += CardName(deck.TopCard())+" "
+        print(str)
+        for line in self.TableauCardNamesInRows():
+            print(line)
+
+    def PrintFancyBoard(self):
+        str = ""
+        gbg = ansi.Bg.green
+        bgb = ansi.Bg.black
+        #gbg = ansi.Bbg.green
+        #bgb = ansi.Bbg.black
+        for deck in self.freecells:
+            str += ColorCard(deck.TopCard()) + CardName(deck.TopCard())+" "
+        for deck in self.foundations:
+            str += ColorCard(deck.TopCard()) + CardName(deck.TopCard())+" "
+        print(gbg, str, bgb)
+        for line in self.TableauCardNamesInRows(True):
+            print(gbg, line, bgb)
+        #print(ansi.Fg.w, line, bgb)
+        print(ansi.reset, end="")
+
+    def PutHome(self, card):
+        card = self.tableau[fm["col"]].Take()
+        self.foundations[suit(card)].Put(card)
+
+    # Given a move in "standard notation" move a single card, no auto, no compund, no super moves
+    # NB doesn't yet check validity of the move
+    def move(self, m, cnt=1):
+        col, idx, home = GetCIH(m[0])
+        #print(fm, to)
+        if m[1] == "h": # special case, move a card to it's home foundation 
+            card = self.tableau[col].Take()
+            self.foundations[suit(card)].Put(card)
+        else:
+            #get from card from freecell or tableau
+            if idx > -1:
+                card = self.freecells[idx].Take() # Board[0][fm["idx"]].pop()
+                self.freecellcnt += 1
+            else:
+                #print(self.board.tableau[fm["col"]])
+                card = self.tableau[col].Take()
+                if len(self.tableau[col]) == 0:
+                    self.freetabcnt += 1
+            # put card in new location in a freecell or tableau
+            col, idx, home = GetCIH(m[1])
+            if  idx > -1:
+                self.freecells[idx].Put(card)
+                self.freecellcnt -= 1
+            else:
+                if len(self.tableau[col]) == 0:
+                    self.freetabcnt -= 1
+                self.tableau[col].Put(card)
+
+    # move cnt cards from and to the locations specified by m
+    # no validation
+    def cmove(self, m, cnt):
+        if cnt == 1:
+            self.move(m)
+        else:
+            # two lines beblow broken?
+            fcol, idx, home = GetCIH(m[0])
+            tcol, idx, home = GetCIH(m[1])
+            self.tableau[fcol].Move(self.tableau[tcol], cnt)
+
+    # Return how many cards can be moved from the supplied source column
+    # and returns the count of cards that can be moved.
+    # The count is moderated by the available freecells and the top card
+    # in the destination.
+    # Does not do supermoves yet.
+    def compoundMove(self, m):
+        if m[0] < "1" or m[0] > "8" or m[1] < "1" or m[1] > "8":
+            return 1
+        src = int(m[0]) - 1
+        dst = int(m[1]) - 1
+        #print("compoundMove", col, freecells, freepiles)
+        cardCount = self.tableau[src].NumOrderedCards()
+        cardCount2 = min(cardCount, self.freecellcnt + 1)
+        oc = self.tableau[src].OrderedCards()
+        mc = self.tableau[src].MatchingCards(self.tableau[dst].TopCard())
+        #print("compoundMove: ", src, dst, cardCount, cardCount2, mc)
+        return cardCount2
 
     # what are all the possible moves for a given card returned as a list of moves
     # if h is a valid move, it will be first in the list
     # Doesn't do supermoves yet. FIX FIX FIX
-    def possibleMoves(self, card):
+    def possibleMoves(self, fm, card):
         ret = []
         # check if card can go to foundation
-        cr, cv, cc = rankmap[rank(card)], value(card), color(card)
-        if cv == 0 or (len(self.Board[0][cr]) > 0 and value(self.Board[0][cr][-1]) + 1 == cv):
+        cr, cs, cc = rank(card), suit(card), color(card)
+        if cr == 0 or (len(self.foundations[cs]) > 0 and rank(self.foundations[cs].TopCard()) + 1 == cr):
             #print("possibleMoves: h")
-            ret.append("h")
+            ret.append(fm + "h")
 
         # check if card can go to other tableau
-        for i in range(1, self.cols):
-            if len(self.Board[i]) < 1:
-                continue # skip empty columns
-            bc = self.Board[i][-1] # bottom card
-            r, v, c = rankmap[rank(bc)], value(bc), color(bc)
-            if v - 1 == cv and c != cc:
-                ret.append(str(i))
+        cnt = -1
+        for col in self.tableau:
+            cnt += 1
+            if len(col) > 0:
+                bc = col[-1] # bottom card
+                r, s, c = rank(bc), suit(bc), color(bc)
+                if not (r - 1 == cr and c != cc):
+                    continue
+            ret.append(fm + str(cnt+1))
         return ret
 
-    # Determine how many cards might be placed beneath the supplied card and return that number.
-    def mightNeed(self, card):
+# depth first
+# list of moves
+# row number where moves are
+# list of indicies to next move row
+    def MoveList(self):
+        moves = []
+        ofc = self.OpenFreeCells()
+
+        # check cascades for moves to the foundations or a freecell
         cnt = 0
-        for i in range(1, self.cols):
-            if len(self.Board[i]) < 1:
+        for col in self.tableau:
+            cnt += 1
+            if len(col) < 1:
+                continue # skip empty columns
+            card = col.TopCard()
+            r, s, c = rank(card), suit(card), color(card)
+
+            #print(i, r, v, c, CardName(card))
+            if len(self.foundations[s]) < 1 and r != 0:
+                continue
+            moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
+            for i in ofc:
+                moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
+
+        # check the freecells for cards that can be moved to foundations
+        cnt = 0
+        for deck in self.freecells:
+            if len(deck) == 1:
+                card = deck.TopCard()
+                moves.extend(elf.possibleMoves(fc[cnt], card))
+        return moves
+
+    # Determine how many cards could be placed beneath the supplied card and return that number.
+    def dependsOn(self, card):
+        cnt = 0
+        for col in self.tableau:
+            if len(col) < 1:
                 continue # skip empty columns
             #print(i, ": ", self.Board[i])
-            for c in self.Board[i]:
-                if value(card) > 0 and value(c) == value(card) -1 and color(c) != color(card):
+            for c in col:
+                if rank(card) > 0 and rank(c) == rank(card) -1 and color(c) != color(card):
                     cnt += 1
-        for i in range(0, 4):
-            if len(self.Board[0][i]) == 1:
-                c = self.Board[0][i][-1]
+        #check freecells
+        for deck in self.freecells:
+            if len(deck) == 1:
+                c = deck.TopCard()
                 #print(c, card)
-                if value(c) == value(card) -1 and color(c) != color(card):
+                if rank(c) == rank(card) -1 and color(c) != color(card):
                     cnt += 1
         return cnt
 
@@ -320,79 +405,148 @@ class FreeCellGame:
         while True:
             iter = 0
             # check cascades
-            for i in range(1, self.cols):
-                if len(self.Board[i]) < 1:
+            for col in self.tableau:
+                if len(col) < 1:
                     continue # skip empty columns
-                card = self.Board[i][-1] # bottom card of column
-                r, v, c = rankmap[rank(card)], value(card), color(card)
+                card = col.TopCard()
+                r, s, c = rank(card), suit(card), color(card)
 
-                #print(i, r, v, c, MSCardName(card))
-                if len(self.Board[0][r]) < 1 and v != 0:
+                #print(i, r, v, c, CardName(card))
+                if len(self.foundations[s]) < 1 and r != 0:
                     continue
 
-                moves = self.possibleMoves(card)
-                cnt = self.mightNeed(card)
-                #print("autoMoves: card=", MSCardName(card), "moves: ", moves, "cnt: ", cnt)
-                if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or v < 2):
+                moves = self.possibleMoves("", card)
+                cnt = self.dependsOn(card)
+                #print("autoMoves: card=", CardName(card), "moves: ", moves, "cnt: ", cnt)
+                if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or r < 2):
                     #  move card to foundation
                     #print("autoMoves: tableau", i)
-                    self.Board[0][r].append(card)
-                    self.Board[i].pop()
+                    # use move
+                    card = col.Take()
+                    self.foundations[s].Put(card)
                     iter += 1
             # check the freecells for cards that can be moved to foundations
-            for i in range(4, 8):
-                if len(self.Board[0][i]) > 0:
-                    card = self.Board[0][i][-1]
-                    moves = self.possibleMoves(card)
-                    cnt = self.mightNeed(card)
+            for deck in self.freecells:
+                if len(deck) == 1:
+                    card = deck.TopCard()
+                    moves = self.possibleMoves("", card)
+                    cnt = self.dependsOn(card)
                     # this code almost copy/paste from above, fix
-                    if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or v < 2):
+                    if len(moves) > 0 and moves[0] == "h" and (cnt == 0 or r < 2):
                         #  move card to foundation
                         #print("autoMoves: freecell", i)
-                        self.Board[0][rankmap[rank(card)]].append(card)
-                        self.Board[0][i].pop()
+                        card = deck.Take()
+                        self.foundations[suit(card)].Put(card)
                         iter += 1
 
             if iter == 0:
                 break
-            # might be more cards to move, try again
+            # loop again, more cards might be to moved
+
+    # returns true if the games has been solved.
+    def Solved(self):
+        topCards = [p.TopCard() for p in self.foundations]
+        return topCards == [49, 50, 51, 52]
+
+    # return a list of empty freecell indicies
+    def OpenFreeCells(self):
+        lst = []
+        cnt = -1
+        for pile in self.foundations:
+            cnt += 1
+            if pile.isEmpty():
+                lst.append(cnt)
+        return lst
+
+class FreeCellGame:
+    def __init__(self):
+        self.board = FreeCellBoard(8, 4, 4)
+
+# Generate a new Freecell game and set up the board, game 5 is easy so it's the default
+    def NewGame(self, game=5):
+        self.board.Setup(game)
+
+    def PrintBoard(self):
+        self.board.PrintBoard()
+
+    def PlayGame(self):
+        self.board.PrintFancyBoard()
+        #print(moves)
+        moveCnt = 1
+        moves = []
+        while True:
+            printf("move[%d]: ", moveCnt)
+            #print("move: ", m)
+            move = input()
+            if not isValidSyntax(move):
+                print("move has invalid syntax")
+                continue
+            cards = self.board.compoundMove(move)
+            #print("compoundMove: ", cards)
+            #self.autoMoves()
+            #print("")
+            self.board.cmove(move, cards)
+            #print("move(", moveCnt, "): ", m) fix fix fix
+            #print("possible moves: ", self.board.MoveList())
+            self.board.autoMoves()
+            #print("")
+            #self.PrintBoard()
+            self.board.PrintFancyBoard()
+            if self.board.Solved():
+                break
+            moveCnt += 1
 
     #play moves and pause after each move and show the board
-    def play(self, moves):
-        self.PrintFancyBoard()
+    def PlayMoves(self, moves):
+        self.board.PrintFancyBoard()
         toss = input()
         #print(moves)
         moveCnt = 1
         for m in moves:
             #print("move: ", m)
-            cards = self.compoundMove(m, self.freecells, 0)
+            cards = self.board.compoundMove(m)
             #print("compoundMove: ", cards)
             #self.autoMoves()
             #print("")
-            self.cmove(m, cards)
+            self.board.cmove(m, cards)
             #print("move(", moveCnt, "): ", m) fix fix fix
-            print("move:", m)
-            self.autoMoves()
+            printf("move[%d]: %s\n", moveCnt, m)
+            #print("possible moves: ", self.board.MoveList())
+            self.board.autoMoves()
             #print("")
-            self.PrintFancyBoard()
+            #self.PrintBoard()
+            self.board.PrintFancyBoard()
             toss = input()
+        return self.board
 
 moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 def test():
+    game = 10913
+    a = FreeCellGame()
+    a.NewGame(game)
+    b = a.PlayMoves(moves)
+    if not b.Solved():
+        printf("game %d, Not Solved\n", game)
+    printf("game %d, Solved\n", game)
+
+def play(game=10913):
+    a = FreeCellGame()
+    a.NewGame(game)
+    a.PlayGame()
+
+def Test():
     a = FreeCellGame()
     a.NewGame(10913)
-    a.play(moves)
+    a.PrintBoard()
+    toss = input()
+    a.board.move("26")
+    a.PrintBoard()
+    a.board.move("1a")
+    a.PrintBoard()
+    a.board.move("1b")
+    a.PrintBoard()
+    a.board.move("8h")
+    a.PrintBoard()
 
-def test1():
-    a = FreeCellGame()
-    a.NewGame(5)
-    a.PrintFancyBoard()
 
-def test2():
-    a = FreeCellGame()
-    a.NewGame(10913)
-    a.PrintFancyBoard()
 
-if __name__ == '__main__':
-    test()
-    
