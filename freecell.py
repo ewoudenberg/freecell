@@ -394,14 +394,26 @@ class Board:
 
         self.printer.print_sheet(sheet)
 
-Moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
+Moves = {
+10913: 
+'''
+26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 
+41 45 34 3c 6d 5b''',
+26693:
+'''
+8a	81	2b	26	72	4c	45	74	78	76
+71	51	71	15	27	26	27	21	12	1d
+17	12	17	18	3h	13	d3	b1	81	68
+6b	5h	6h	68	2h	ch	21	32	3c	3d
+38	43	52	85	86'''
+}
 
 def main():
     lines = []
     if len(sys.argv) > 1:
         filename = sys.argv[1]
         if filename == 'test':
-            lines = Moves
+            lines = Moves[10913].split()
         else:
             lines = open(sys.argv[1]).readlines()
 
