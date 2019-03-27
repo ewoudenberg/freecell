@@ -70,21 +70,21 @@ class Random:
         if first5 != [41, 18467, 6334, 26500, 19169]:
             print('Caution! Random number generator FAILS to match MS compiler runtime')
 
-CardRanks = 'A23456789TJQK'
-CardSuits = 'CDHS'
-CardGlyphs = '♣♦♥♠'
-
 # Card is created with the MS card "number" 1-52
 class Card:
+    Ranks = 'A23456789TJQK'
+    Suits = 'CDHS'
+    Glyphs = '♣♦♥♠'
+
     def __init__(self, number):
         if number < 1 or number > DECK_SIZE:
             raise Exception(f'Card __init__ botch: {number} is not in range')
 
         number -= 1
-        self.suit = CardSuits[number % 4]
-        self.glyph = CardGlyphs[number % 4]
+        self.suit = Card.Suits[number % 4]
+        self.glyph = Card.Glyphs[number % 4]
         self.rank_index = number // 4
-        self.rank = CardRanks[self.rank_index]
+        self.rank = Card.Ranks[self.rank_index]
         self.color = 'red' if self.suit in 'DH' else 'black'
 
     # Can the new_card be on top of us (next lower rank, opposite color) in a tableau?
@@ -249,7 +249,7 @@ CascadeNames = '12345678'
 class Board:
     def __init__(self, seed, printer=TTY()
     ):
-        self.homes = ColumnGroup(Column(type='HOME', location=i) for i in CardGlyphs)
+        self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in CascadeNames)
         self.move_counter = 0
@@ -351,7 +351,7 @@ class Board:
     def is_card_needed(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
-        if card.rank_index > CardRanks.index("2"):
+        if card.rank_index > Card.Ranks.index("2"):
             for column in self.cascades + self.frees:
                 for board_card in column:
                     if card.can_tableau(board_card):
