@@ -241,7 +241,7 @@ class BoardSnapshot:
         board.move_counter = self.move_counter
 
 # An exception thrown on illegal user moves
-class MoveException(Exception): pass
+class UserException(Exception): pass
 
 FreeCellNames = 'abcd'
 CascadeNames = '12345678'
@@ -296,7 +296,7 @@ class Board:
         try:
             self.compound_move(move)
 
-        except MoveException as e:
+        except UserException as e:
             print(e)
             success = False
             if save_history:
@@ -311,27 +311,23 @@ class Board:
     # can be all the source locations plus h (homes).
     def compound_move(self, move):
         if len(move) != 2:
-            raise MoveException(f'Error, move "{move}" is not two characters')
+            raise UserException(f'Error, move "{move}" is not two characters')
 
         src, dst = move
         src_column = self.get_src_column(src)
         card = src_column and src_column.peek_card_from_top()
         if not card:
-            raise MoveException(f'No card at {src}')
-
-        max_supermove_size = self.get_max_supermove_size()
+            raise UserException(f'No card at {src}')
 
         dst_column = self.get_dst_column(dst, card)
-
-        if dst_column is not None \
-            and dst_column.can_accept_column(src_column, max_supermove_size):
-
-            dst_column.add_cards_from_column(src_column, max_supermove_size)
-
-            self.move_counter += 1
-
-        else:
-            raise MoveException(f'Illegal move {move}')
+        max_supermove_size = self.get_max_supermove_size()
+        
+        if dst_column is None \
+            or not dst_column.can_accept_column(src_column, max_supermove_size):
+            raise UserException(f'Illegal move {move}')
+    
+        dst_column.add_cards_from_column(src_column, max_supermove_size)
+        self.move_counter += 1
 
     # Hunt for cards on top of the cascades columns and in free cells that can
     # be moved home (unless there are other cards on the cascades that could cascade 
