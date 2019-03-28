@@ -207,8 +207,8 @@ class Column(list):
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_from_top()}'
     
-# A ColumnGroup is a unifying container for the 3 groups 
-# of columns (the cascades, the freecells and the homes).
+# A ColumnGroup is a unifying container for the 3 distinct groups 
+# of columns (the cascades, the freecells and the foundations).
 # The constructor takes a list of columns.
 
 class ColumnGroup(list):
