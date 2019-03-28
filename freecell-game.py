@@ -81,8 +81,8 @@ class Options:
             self.help = False
 
 def play():
-    moves = []
     printer = LinePrinter()
+    moves = []
 
     if Opts.play_back:
         if Opts.game not in Games:
