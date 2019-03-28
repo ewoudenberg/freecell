@@ -120,7 +120,7 @@ class Column(list):
                         
         self.location = location
         self.type = type
-        # Set our instance properties to the appropriate configuration
+        # Set our instance properties appropriately based on the column type.
         self.__dict__.update(type_configurations[type])
 
     def add_card(self, card):
@@ -346,8 +346,9 @@ class Board:
                     if home is not None:
                         yield src_column.location + 'h'
                         break
+
+            # If we exhaust the list without yielding a move, we're done.
             else:
-                # If we exhaust the list without yielding a move, we're done.
                 break
 
     # Is there a card on the board that this card could cascade onto? Meaning
