@@ -351,8 +351,8 @@ class Board:
             else:
                 break
 
-    # Is there a card on the board that this card could cascade onto? (Meaning
-    # that card could become orphaned if it loses this card as a parent)
+    # Is there a card on the board that this card could cascade onto? (Meaning that 
+    # the card could become orphaned if it loses this card as its tableau parent)
     def is_card_needed(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
