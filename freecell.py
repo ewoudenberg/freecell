@@ -21,7 +21,7 @@ Building during play
 - Foundations are built up by suit.
 
 Moves
-
+ 
 - Any cell card or top card of any cascade may be moved to build on a tableau, or moved to an empty cell, 
   an empty cascade, or its foundation.
 - Complete or partial tableaus may be moved to build on existing tableaus, or moved to empty cascades, by 
@@ -120,6 +120,7 @@ class Column(list):
                         
         self.location = location
         self.type = type
+        # Set our instance properties to the appropriate configuration
         self.__dict__.update(type_configurations[type])
 
     def add_card(self, card):
@@ -136,7 +137,8 @@ class Column(list):
     def add_cards_from_column(self, src_column, max_supermove_size):
         card_count = self.get_column_move_size(src_column, max_supermove_size)
         if card_count:
-            for card in src_column.remove_top_cards(card_count):
+            source_cards = src_column.remove_top_cards(card_count)
+            for card in source_cards:
                 self.add_card(card)
 
     # Can the given card be legally added to this columm?
