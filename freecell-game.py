@@ -110,10 +110,10 @@ def play():
         if move:
             printer.print_header(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
 
-        # If that's exhausted, ask for manual input
+        # If that's exhausted, ask the user for input
         else:
             printer.flush()
-            print('your move? ', end='')
+            print('Your move? ', end='')
             move = input()
             printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
 
@@ -139,6 +139,8 @@ def play():
 
     printer.flush()
         
+# A few solved games from https://freecellgamesolutions.com
+
 Games = {
     10913: '''
         26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 
