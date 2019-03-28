@@ -347,12 +347,12 @@ class Board:
                         yield src_column.location + 'h'
                         break
 
-            # If we exhaust the list without yielding a move, we're done.
+            # After we've scanned all the columns without yielding a move, we're done.
             else:
                 break
 
-    # Is there a card on the board that this card could cascade onto? Meaning
-    # that card could become orphaned if it loses this card as a parent.
+    # Is there a card on the board that this card could cascade onto? (Meaning
+    # that card could become orphaned if it loses this card as a parent)
     def is_card_needed(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
@@ -380,7 +380,7 @@ class Board:
     def print(self):
         sheet = PrinterSheet()
 
-        # Print Guides
+        # Print the top guide (frees and homes locations)
         for i in self.frees + self.homes:
             sheet.print(f'{i.location}  ', end='')
         sheet.print()
@@ -397,7 +397,7 @@ class Board:
             sheet.print()
         sheet.print(ansi.reset, end='')
 
-        # Place the column numbers at the bottom for easy reading.
+        # Place the bottom guide (the cascade numbers)
         for i in self.cascades:
             sheet.print(f'{i.location}  ', end='')
         sheet.print()
