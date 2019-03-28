@@ -35,7 +35,7 @@ import math
 import copy
 import string
 
-from printers import TTY, LinePrinter, PrinterSheet
+from printers import TTY, PrinterSheet
 
 # Create a deck of cards
 
