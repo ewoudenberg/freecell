@@ -25,6 +25,16 @@ Generate MS compatible Freecell deals and play them.
        -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
        -h --help print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
+
+Game features:
+
+ o Plays a standard MS freecell game, using the standard 2 character move syntax:
+     <source><destination> where source is "1-9", "a-d" and destination adds "h" for home.
+ o The character '#' when used as a destination indicates the first available freecell.
+ o Use the single character "u" to undo a move.
+ o The game logs all user moves to the file "moves.log". These can be played back with the
+   option "-F moves.log".
+
 ''')
     sys.exit(1)
 
