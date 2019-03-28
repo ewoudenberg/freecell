@@ -3,6 +3,7 @@
 # User interface to the Freecell game engine
 
 import sys
+import os
 import getopt
 import ansi
 
@@ -31,7 +32,7 @@ def usage():
        -F <file> --file <file> - take input from a file (default: keyboard)
        -i or --ignore-dependencies - auto-moves ignore dependencies on other cards on the board
        -h --help print this help sheet
-    Try "./freecell.py -p 10913" to rn with the builtin test
+    Try "{sys.argv[0]} -p 10913" to rn with the builtin test
 ''')
     sys.exit(1)
 
@@ -82,21 +83,21 @@ def play():
 
     if Opts.play_back:
         if Opts.game not in Games:
-            print(f'*** Game {Opts.game} not available for playback ***')
+            print(f'*** Game "{Opts.game}" not available for playback ***')
             usage()
         moves = Games[Opts.game].split()
 
     if Opts.input:
-        if not os.path.exists(input):
-            print(f'*** File {Opts.input} does not exist ***')
+        if not os.path.exists(Opts.input):
+            print(f'*** File "{Opts.input}"" does not exist ***')
             usage()
         moves = open(Opts.input).readlines()
 
     movesLog = open('moves.log', 'w')
 
     board = Board(seed=Opts.game, printer=printer, 
-            freecells=Opts.freecells, cascades=Opts.cascades,
-            ignore_dependencies=Opts.ignore_dependencies)
+                  freecells=Opts.freecells, cascades=Opts.cascades,
+                  ignore_dependencies=Opts.ignore_dependencies)
     board.print()
 
     while not board.is_empty():

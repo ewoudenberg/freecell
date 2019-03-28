@@ -376,20 +376,25 @@ class Board:
 
     def print(self):
         sheet = PrinterSheet()
-        for i in self.frees: 
-            sheet.printcard(i.peek_card_from_top())
 
-        for i in self.homes: 
+        # Print Guides
+        for i in self.frees + self.homes:
+            sheet.print(f'{i.location}  ', end='')
+        sheet.print()
+
+        # Print Frees and Homes
+        for i in self.frees + self.homes:
             sheet.printcard(i.peek_card_from_top())
         sheet.print()
 
+        # Print the Cascade
         for row in range(self.cascades.get_row_count()):
             for col in self.cascades: 
                 sheet.printcard(col.peek_card_from_row(row))
             sheet.print()
+        sheet.print(ansi.reset, end='')
 
         # Place the column numbers at the bottom for easy reading.
-        sheet.print(ansi.reset, end='')
         for i in self.cascades:
             sheet.print(f'{i.location}  ', end='')
         sheet.print()
