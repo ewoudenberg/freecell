@@ -33,6 +33,7 @@ import random
 import ansi
 import math
 import copy
+import string
 
 from printers import TTY, LinePrinter, PrinterSheet
 
@@ -224,8 +225,6 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(column) for column in self)
 
-
-
 class BoardSnapshot:
     def __init__(self, board):
         self.frees = copy.deepcopy(board.frees)
@@ -242,18 +241,23 @@ class BoardSnapshot:
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
 
-FreeCellNames = 'abcd'
-CascadeNames = '12345678'
-
 class Board:
-    def __init__(self, seed, printer=TTY()):
+    FreeCellNames = 'abcdefgijklmnopqrstuvwxyz' # leaves out "h" (used for home)
+    CascadeNames = '123456789' + string.ascii_uppercase
+
+    def __init__(self, seed, printer=TTY(), freecells=4, cascades=8, ignore_dependencies=False):
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
-        self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in FreeCellNames)
-        self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in CascadeNames)
+        self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
+        self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
         self.move_counter = 0
         self.history = []
         self.printer = printer
+        self.ignore_dependencies = ignore_dependencies
 
+        if cascades < 1 or cascades > len(Board.CascadeNames) or \
+            freecells < 0 or freecells > len(Board.FreeCellNames):
+            raise Exception('Board initialization error')
+            
         # Go round-robin, placing cards from the shuffled deck in each column of the cascades.
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
@@ -272,8 +276,8 @@ class Board:
 
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
-        # Bonus feature: "f" serves to find any available FreeCell slot.
-        if location == 'f':
+        # Bonus feature: "#" serves to find any available FreeCell slot.
+        if location == '#':
             for i in self.frees:
                 if i.can_accept_card(card):
                     return i
@@ -349,7 +353,7 @@ class Board:
     def is_card_needed(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
-        if card.rank_index > Card.Ranks.index("2"):
+        if card.rank_index > Card.Ranks.index("2") and not self.ignore_dependencies:
             for column in self.cascades + self.frees:
                 for board_card in column:
                     if card.can_tableau(board_card):
@@ -386,8 +390,8 @@ class Board:
 
         # Place the column numbers at the bottom for easy reading.
         sheet.print(ansi.reset, end='')
-        for i in range(1,9):
-            sheet.print(f'{i}  ', end='')
+        for i in self.cascades:
+            sheet.print(f'{i.location}  ', end='')
         sheet.print()
 
         self.printer.print_sheet(sheet)

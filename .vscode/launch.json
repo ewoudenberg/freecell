@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: freecell.py",
+            "name": "Python: freecell-game.py",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "pythonPath": "/Users/ericwoudenberg/Kai/venv3.6/bin/python",
-            "program": "${workspaceFolder}/freecell.py",
-            "args": [ "test" ],
+            "program": "${workspaceFolder}/freecell-game.py",
+            "args": ["-c", "35" ],
             "debugOptions": [
                 "RedirectOutput",
             ]
