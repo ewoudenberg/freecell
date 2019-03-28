@@ -10,29 +10,22 @@ import ansi
 from printers import TTY, LinePrinter, PrinterSheet
 from freecell import Board
 
-Games = {
-10913: '''
-    26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 
-    41 45 34 3c 6d 5b''',
-26693: '''
-    8a	81	2b	26	72	4c	45	74	78	76
-    71	51	71	15	27	26	27	21	12	1d
-    17	12	17	18	3h	13	d3	b1	81	68
-    6b	5h	6h	68	2h	ch	21	32	3c	3d
-    38	43	52	85	86'''
-}
 
 def usage():
+    available_games = ', '.join(f'{i}' for i in Games.keys())
     print(f'''\nusage: freecell.py [options]
+
+Generate MS compatible Freecell deals and play them.
+
     Options:
-       -f n or --freecells=n - set number of freecells (0-{len(Board.FreeCellNames)} default: 4)
-       -c n or --cascades=n - set number of cascades (1-{len(Board.CascadeNames)} default: 8)
-       -p n or --play-back=n - play back game number n (only 10913 and 26693 work)
-       -g n or --game n - play game n (default: 10913)
-       -F <file> --file <file> - take input from a file (default: keyboard)
-       -i or --ignore-dependencies - auto-moves ignore dependencies on other cards on the board
+       -f or --freecells n - set number of freecells (0-{len(Board.FreeCellNames)} default: 4)
+       -c or --cascades n - set number of cascades (1-{len(Board.CascadeNames)} default: 8)
+       -p or --play-back n - play back game number n (only these are avaialble: {available_games})
+       -g or --game n - play game n (default: 10913)
+       -F or --file <file> - take input from a file (default: keyboard)
+       -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
        -h --help print this help sheet
-    Try "{sys.argv[0]} -p 10913" to rn with the builtin test
+    Try "{sys.argv[0]} -p 10913" to run with the builtin test
 ''')
     sys.exit(1)
 
@@ -74,8 +67,6 @@ class Options:
         if self.input and self.play_back:
             print('*** Cannot specify both --input and --playback ***')
             usage()
-
-Opts = Options()
 
 def play():
     moves = []
@@ -136,13 +127,40 @@ def play():
 
     printer.flush()
         
-
 def main():
+    global Opts
+    Opts = Options()
     try:
         play()
     except Exception as e:
         print(f'*** {e} ***')
         usage()
+
+Games = {
+    10913: '''
+        26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 
+        41 45 34 3c 6d 5b''',
+    26693: '''
+        8a	81	2b	26	72	4c	45	74	78	76
+        71	51	71	15	27	26	27	21	12	1d
+        17	12	17	18	3h	13	d3	b1	81	68
+        6b	5h	6h	68	2h	ch	21	32	3c	3d
+        38	43	52	85	86''',
+    29596: '''
+        7a	7b	3c	32	73	63	5d	57	46	42
+        47	c7	67	5c	57	d7	b5	45	4b	47
+        37	35	1d	14	34	24	c1	23	2c	28
+        21	24	26	b2	62	32	a4	13	18	16
+        1a	a1	c1	51	52	85	65	86	82	82
+        83	73	78	 ''',
+    31465: '''
+        62	6a	1b	16	18	18	13	1c	61	6d
+        c6	a6	d6	4a	4c	41	4d	48	7h	6h
+        6h	d6	4d	b4	d4	18	7b	7h	57	5d
+        51	c5	75	7h	31	3c	3h	3h	34	c4
+        63	81	86	87	8c	85	8h	54	58	25
+        2d	2b'''
+}
 
 if __name__ == '__main__':
     main()
