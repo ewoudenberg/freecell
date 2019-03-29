@@ -275,28 +275,13 @@ class Board:
             location = card.glyph
         return self.dst_column_map.get(location)
 
-    # The public "move" interface that keeps a history and reports errors.
-    def move(self, move, save_history=False):
-        if save_history:
-            self.snapshot()
-
-        success = True
-        try:
-            self.compound_move(move)
-
-        except UserException as e:
-            print(e)
-            success = False
-            if save_history:
-                self.undo()
-
-        return success
-
     # This moves cards between locations (cascades, frees, homes), attempting 
     # to move as many valid cards as it can on cascade-to-cascade moves.
     # The "move" parameter is a two character string: <source><destination>
     # where <source> can be 1-8 (the cascades), a-d (the frees) and <destination>
     # can be all the source locations plus h (homes).
+    # Tis raises a UserException if the move is illegal in any way.
+    
     def compound_move(self, move):
         if len(move) != 2:
             raise UserException(f'Error, move "{move}" is not two characters')
@@ -304,7 +289,7 @@ class Board:
         src, dst = move
 
         src_column = self.get_src_column(src)
-        if not src_column:
+        if src_column is None:
             raise UserException(f'Illegal move {move}')
 
         card = src_column.peek_card_from_top()
@@ -322,6 +307,23 @@ class Board:
         dst_column.add_cards_from_column(src_column, supermove_room)
 
         self.move_counter += 1
+
+    # The public "move" interface that keeps a history and reports errors.
+    def move(self, move, save_history=False):
+        if save_history:
+            self.snapshot()
+
+        success = True
+        try:
+            self.compound_move(move)
+
+        except UserException as e:
+            print(e)
+            success = False
+            if save_history:
+                self.undo()
+
+        return success
 
     # Hunt for cards on top of the cascades columns and in free cells that can
     # be moved home (unless there are other cards on the cascades that could cascade 
