@@ -162,16 +162,17 @@ class Column(list):
     # Can some cards from the given column be added to this column, given the amount
     # of supermove room?
     def can_accept_column(self, src_column, supermove_room):
-        return bool( self.get_column_move_size(src_column, supermove_room )
+        return bool( self.get_column_move_size(src_column, supermove_room) )
 
-    # Find a legal move from the src column into ours and report 
+    # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
         src_length = src_column.get_removable_amount()
-        max_cards = min(supermove_room, src_length, self.max_length-len(self))
+        max_length = min(src_length, supermove_room, self.max_length-len(self))
+
         # Loop through possible xfers (trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the string).
-        for i in range(max_cards, 0, -1):
+        for i in range(max_length, 0, -1):
             card = src_column.peek_card_from_top(depth=i-1)
             if self.can_accept_card(card):
                 return i
