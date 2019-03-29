@@ -183,6 +183,7 @@ class Column(list):
         # Use a slice to make a copy of ourselves so we don't actually change.
         return len(self.remove_tableau(self[:]))
 
+    # Remove all the cards that constitute a tableau and return them.
     def remove_tableau(self, column, top_card=None):
         tableau = []
         if column and column[-1].can_tableau(top_card):
