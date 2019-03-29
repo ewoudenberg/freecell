@@ -183,7 +183,7 @@ class Column(list):
         top_card = self.peek_card_from_top()
         if top_card:
             run_length += 1
-            # From how deep do the cards cascade?
+            # Burrow into the column to find out how deep the cards cascade.
             while True:
                 deeper_card = self.peek_card_from_top(run_length)
                 if not deeper_card or not deeper_card.can_tableau(top_card):
@@ -369,7 +369,10 @@ class Board:
             self.restore_state(self.history.pop())
 
     def get_state(self):
-        return copy.deepcopy(dict(frees=self.frees, homes=self.homes, cascades=self.cascades, move_counter=self.move_counter))
+        return copy.deepcopy(dict(frees=self.frees, 
+                                  homes=self.homes, 
+                                  cascades=self.cascades, 
+                                  move_counter=self.move_counter))
 
     def restore_state(self, state):
         self.frees = state['frees']
