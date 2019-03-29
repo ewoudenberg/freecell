@@ -167,8 +167,8 @@ class Column(list):
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, supermove_room):
-        src_removable_cards = src_column.get_removable_amount()
-        max_cards = min(supermove_room, src_removable_cards, self.max_length-len(self))
+        src_length = src_column.get_removable_amount()
+        max_cards = min(supermove_room, src_length, self.max_length-len(self))
         # Loop through possible xfers (trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the string).
         for i in range(max_cards, 0, -1):
