@@ -135,8 +135,8 @@ class Column(list):
 
     # Find and move the legally correct number of cards from the source column
     # to ourselves, removing them from the source column.
-    def add_cards_from_column(self, src_column, supermove_room):
-        card_count = self.get_column_move_size(src_column, supermove_room)
+    def add_cards_from_column(self, src_column, movement_room):
+        card_count = self.get_column_move_size(src_column, movement_room)
         if card_count:
             source_cards = src_column.remove_top_cards(card_count)
             for card in source_cards:
@@ -161,17 +161,17 @@ class Column(list):
 
     # Can some cards from the given column be added to this column, given the amount
     # of supermove room?
-    def can_accept_column(self, src_column, supermove_room):
-        return self.get_column_move_size(src_column, supermove_room) != 0
+    def can_accept_column(self, src_column, movement_room):
+        return self.get_column_move_size(src_column, movement_room) != 0
 
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
-    def get_column_move_size(self, src_column, supermove_room):
+    def get_column_move_size(self, src_column, movement_room):
         src_length = src_column.get_removable_amount()
-        max_length = min(src_length, supermove_room, self.max_length-len(self))
+        max_length = min(src_length, movement_room, self.max_length-len(self))
 
-        # Loop through possible xfers (trying the largest stretch of cards first
-        # since moves to an empty column can start from any card in the string).
+        # Loop through possible xfers, trying the largest stretch of cards first
+        # since moves to an empty column can start from any card in the tableau.
         for i in range(max_length, 0, -1):
             card = src_column.peek_card_from_top(depth=i-1)
             if self.can_accept_card(card):
@@ -218,6 +218,7 @@ class ColumnGroup(list):
         list.__init__(self, *args)
 
     # Return a column that can accept our card
+    # (Currently only used to find automatic moves to home)
     def find_column_for_card(self, card):
         for column in self:
             if column.can_accept_card(card):
@@ -301,11 +302,11 @@ class Board:
         if dst_column is None:
             raise UserException(f'Illegal move {move}')
 
-        supermove_room = self.get_supermove_room()
-        if not dst_column.can_accept_column(src_column, supermove_room):
+        movement_room = self.get_movement_room()
+        if not dst_column.can_accept_column(src_column, movement_room):
             raise UserException(f'Illegal move {move}')
     
-        dst_column.add_cards_from_column(src_column, supermove_room)
+        dst_column.add_cards_from_column(src_column, movement_room)
 
         self.move_counter += 1
 
@@ -356,10 +357,10 @@ class Board:
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    def get_supermove_room(self):
+    # This incorporates the basic movement room alloted by the freecells.
+    def get_movement_room(self):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i)
-        # Must be some error in the formula -- I had to add max of (empty_frees+1) to it.
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
     def snapshot(self):
