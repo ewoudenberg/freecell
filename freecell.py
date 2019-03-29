@@ -215,6 +215,7 @@ class ColumnGroup(list):
     def __init__(self, *args):
         list.__init__(self, *args)
 
+    # Return a column that can accept our card
     def find_column_for_card(self, card):
         for column in self:
             if column.can_accept_card(card):
