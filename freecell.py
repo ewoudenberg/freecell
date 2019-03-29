@@ -134,8 +134,8 @@ class Column(list):
 
     # Find and move the legally correct number of cards from the source column
     # to ourselves, removing them from the source column.
-    def add_cards_from_column(self, src_column, max_supermove_size):
-        card_count = self.get_column_move_size(src_column, max_supermove_size)
+    def add_cards_from_column(self, src_column, supermove_room):
+        card_count = self.get_column_move_size(src_column, supermove_room)
         if card_count:
             source_cards = src_column.remove_top_cards(card_count)
             for card in source_cards:
@@ -324,11 +324,11 @@ class Board:
         if dst_column is None:
             raise UserException(f'Illegal move {move}')
 
-        max_supermove_size = self.get_max_supermove_size()
-        if not dst_column.can_accept_column(src_column, max_supermove_size):
+        supermove_room = self.get_supermove_room()
+        if not dst_column.can_accept_column(src_column, supermove_room):
             raise UserException(f'Illegal move {move}')
     
-        dst_column.add_cards_from_column(src_column, max_supermove_size)
+        dst_column.add_cards_from_column(src_column, supermove_room)
 
         self.move_counter += 1
 
@@ -362,7 +362,7 @@ class Board:
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    def get_max_supermove_size(self):
+    def get_supermove_room(self):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i)
         # Must be some error in the formula -- I had to add max of (empty_frees+1) to it.
