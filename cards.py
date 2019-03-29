@@ -8,15 +8,15 @@ import ansi
 def printf(str, *args):
     print(str % args, end='')
 
-# cards are numbered 1-52, so zero is an error.
+# cards are integers numbered 1-52, so zero is an error.
 # cards have 3 attributes, rank (0-12), suit (0-3) and color (True if red, False if black).
 # MS uses value ordering, so the first 4 cards are A♣, A♦, A♥, A♠
 # I prefer rank ordering but I decided to go with MS.
-# if a card is negative it's facedown, not used for Freecell, but needed for Klondike.
+# if a card is negative, it's facedown, not used for Freecell, but needed for Klondike.
 CardNames = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
-LongRankNames = ["Club", "Diamond", "Heart", "Spade"]
-MSSuitNames = ["C", "D", "H", "S"]
-MSSuitGlyphs = ["♣", "♦", "♥", "♠"]
+LongSuitNames = ["Club", "Diamond", "Heart", "Spade"]
+SuitNames = ["C", "D", "H", "S"]
+SuitGlyphs = ["♣", "♦", "♥", "♠"]
 FreeCellNames =  ["a", "b", "c", "d"]
 
 def rank(card):
@@ -36,9 +36,12 @@ def CardName(card, glyph=True):
     if card <= 0:
         return "  "
     if glyph:
-        return CardNames[rank(card)] + MSSuitGlyphs[suit(card)]
+        return CardNames[rank(card)] + SuitGlyphs[suit(card)]
     else:
-        return CardNames[rank(card)] + MSSuitNames[suit(card)]
+        return CardNames[rank(card)] + SuitNames[suit(card)]
+
+def CardNumber(name):
+    return CardNames.index(name[0])*4 + SuitNames.index([name[1]])
 
 #print an ANSI sequence that sets the card color
 def ColorCard(card, used=True):
@@ -76,6 +79,9 @@ def GetCIH(l):
     elif l == "h":
         home = True # home = l == "h"
     return (col, idx, home)
+
+def MoveName(src, dst):
+    return src.name + dst.name
 
 # Suposedly MS compiler runtime compatible version of rand
 # first 5 numbers with seed of 1 are 41, 18467, 6334, 26500, 19169
@@ -129,10 +135,12 @@ class Deck(list):
 
 # A pile of cards implmented as a list.
 class Pile(list):
-    def __init__(self, kind):
+    def __init__(self, kind, name, suit):
         if not kind in ["tableau", "freecell", "foundation"]:
             raise("Pile: invalid kind")
         self.kind = kind
+        self.name = name
+        self.suit = suit # only used for foundations
 
     def isEmpty(self):
         return(len(self) == 0)
@@ -146,10 +154,12 @@ class Pile(list):
     def Count(self):
         return(len(self))
 
+    # the top card of a pile coild also be called the bottom card of tableau
+    # we simple return the last in the list
     def TopCard(self):
         if len(self) == 0:
             return 0
-        return(self[::-1][0])
+        return(self[-1])
 
     def Move(self, to, cnt):
         rev = self[::-1][0:cnt]
@@ -157,6 +167,7 @@ class Pile(list):
         for i in range(cnt):
             self.Take()
 
+    # return the cards on a tableau that are "in order"
     def OrderedCards(self):
         lst = self[::-1]
         l = len(lst)
@@ -180,6 +191,7 @@ class Pile(list):
         #print(oc)
         return len(oc)
 
+    # how many cards can be moved from a tableau onto topCard
     def MatchingCards(self, topCard):
         oc = self.OrderedCards()
         if topCard == 0:
@@ -192,14 +204,43 @@ class Pile(list):
         #print("MatchingCards: ", cnt, topCard, oc)
         return cnt
 
+    # can card be moved onto a pile
+    def CanGoOnto(self, card):
+        if self.kind == "freecell":
+            return len(self) == 0
+        elif self.kind == "foundation":
+            # check if card can go to foundation
+            return (rank(card) == 0 and suit(card) == self.suit) or (len(self) > 0 and rank(self.TopCard()) == rank(card) - 1 and suit(self.TopCard()) == suit(card))
+        elif self.kind == "tableau":
+            return len(self) > 0 and rank(self.TopCard()) == rank(card) + 1 and color(self.TopCard()) != color(card)
+        else: 
+            raise("CanGoOnto: bad tableau")
+
+
 # The board of a Freecell game.
 class FreeCellBoard():
-    def __init__(self, ntableau, nfreecells, nfoundations):
-        self.tableau = [Pile("tableau") for p in range(ntableau)]
-        self.freecells = [Pile("freecell") for p in range(nfreecells)]
-        self.foundations = [Pile("foundation") for p in range(nfoundations)]
-        self.freecellcnt = 4
-        self.freetabcnt = 0
+    def __init__(self, tableaux, freecells, foundations):
+        self.tableau = [Pile("tableau", name, 0) for name in tableaux]
+        self.freecells = [Pile("freecell", name, 0) for name in freecells]
+        self.foundations = []
+        cnt = 0
+        for name in foundations:
+            pile = Pile("foundation", name, cnt)
+            self.foundations.append(pile)
+            cnt += 1
+
+    def freecellcnt(self):
+        cnt = 0
+        for p in self.freecells:
+            cnt += len(p)
+        return len(self.freecells) - cnt
+
+    def freetabcnt(self):
+        cnt = 0
+        for p in self.tableau:
+            if len(p) == 0:
+                cnt += 1
+        return cnt
 
     def longestCol(self):
         return max([len(l) for l in self.tableau])
@@ -280,20 +321,14 @@ class FreeCellBoard():
             #get from card from freecell or tableau
             if idx > -1:
                 card = self.freecells[idx].Take() # Board[0][fm["idx"]].pop()
-                self.freecellcnt += 1
             else:
                 #print(self.board.tableau[fm["col"]])
                 card = self.tableau[col].Take()
-                if len(self.tableau[col]) == 0:
-                    self.freetabcnt += 1
             # put card in new location in a freecell or tableau
             col, idx, home = GetCIH(m[1])
             if  idx > -1:
                 self.freecells[idx].Put(card)
-                self.freecellcnt -= 1
             else:
-                if len(self.tableau[col]) == 0:
-                    self.freetabcnt -= 1
                 self.tableau[col].Put(card)
 
     # move cnt cards from and to the locations specified by m
@@ -302,7 +337,7 @@ class FreeCellBoard():
         if cnt == 1:
             self.move(m)
         else:
-            # two lines beblow broken?
+            # two lines below broken?
             fcol, idx, home = GetCIH(m[0])
             tcol, idx, home = GetCIH(m[1])
             self.tableau[fcol].Move(self.tableau[tcol], cnt)
@@ -319,7 +354,7 @@ class FreeCellBoard():
         dst = int(m[1]) - 1
         #print("compoundMove", col, freecells, freepiles)
         cardCount = self.tableau[src].NumOrderedCards()
-        cardCount2 = min(cardCount, self.freecellcnt + 1)
+        cardCount2 = min(cardCount, self.freecellcnt() + 1)
         oc = self.tableau[src].OrderedCards()
         mc = self.tableau[src].MatchingCards(self.tableau[dst].TopCard())
         #print("compoundMove: ", src, dst, cardCount, cardCount2, mc)
@@ -348,37 +383,72 @@ class FreeCellBoard():
             ret.append(fm + str(cnt+1))
         return ret
 
-# depth first
-# list of moves
-# row number where moves are
-# list of indicies to next move row
+# list of possible moves in order of (my guess at) potential to lead to a solution
+# 1. tableau to foundation
+# 2. freecell to foundation
+# 3. tableau to freecell
+# 4. tableau to tableau
+# 5. freecell to tableau
+# GOING TO IMPROVE THIS CODE, should be cartesian product but there is one execption
     def MoveList(self):
         moves = []
         ofc = self.OpenFreeCells()
 
-        # check cascades for moves to the foundations or a freecell
-        cnt = 0
+        # 1. check tableau for moves to the foundations
         for col in self.tableau:
-            cnt += 1
-            if len(col) < 1:
-                continue # skip empty columns
             card = col.TopCard()
-            r, s, c = rank(card), suit(card), color(card)
+            for p in self.foundations:
+                if p.CanGoOnto(card):
+                    moves.append(MoveName(col, p))
 
-            #print(i, r, v, c, CardName(card))
-            if len(self.foundations[s]) < 1 and r != 0:
-                continue
-            moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
-            for i in ofc:
-                moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
+        # 2. check freecells for moves to the tableau
+        for col in self.freecells:
+            card = col.TopCard()
+            for p in self.foundations:
+                if p.CanGoOnto(card):
+                    moves.append(MoveName(col, p))
+
+        # 3. check tableau for moves to the foundations
+        for col in self.tableau:
+            card = col.TopCard()
+            for p in self.freecells:
+                if p.CanGoOnto(card):
+                    moves.append(MoveName(col, p))
+
+        # 4. check tableau for moves to the empty tableau FIX FIX FIX
+        # needs to handle the multiple cards case
+        for col in self.tableau:
+            card = col.TopCard()
+            for p in self.tableau:
+                if p.CanGoOnto(card):
+                    moves.append(MoveName(col, p))
+
+        # 5. check freecells for moves to the tableau
+        for col in self.freecells:
+            card = col.TopCard()
+            for p in self.tableau:
+                if p.CanGoOnto(card):
+                    moves.append(MoveName(col, p))
+
+        return moves
+
+
+
+
+#            #print(i, r, v, c, CardName(card))
+#            if len(self.foundations[s]) < 1 and r != 0:
+#                continue
+#            moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
+#            for i in ofc:
+#                moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
 
         # check the freecells for cards that can be moved to foundations
-        cnt = 0
-        for deck in self.freecells:
-            if len(deck) == 1:
-                card = deck.TopCard()
-                moves.extend(elf.possibleMoves(fc[cnt], card))
-        return moves
+#       cnt = 0
+#      for deck in self.freecells:
+#            if len(deck) == 1:
+#               card = deck.TopCard()
+#                moves.extend(elf.possibleMoves(fc[cnt], card))
+#        return moves
 
     # Determine how many cards could be placed beneath the supplied card and return that number.
     def dependsOn(self, card):
@@ -458,9 +528,13 @@ class FreeCellBoard():
                 lst.append(cnt)
         return lst
 
+tableaux = ["1", "2", "3", "4", "5", "6", "7", "8"]
+freecells = ["a", "b", "c", "d"]
+foundations = ["h", "h", "h", "h"]
+
 class FreeCellGame:
     def __init__(self):
-        self.board = FreeCellBoard(8, 4, 4)
+        self.board = FreeCellBoard(tableaux, freecells, foundations)
 
 # Generate a new Freecell game and set up the board, game 5 is easy so it's the default
     def NewGame(self, game=5):
@@ -503,6 +577,7 @@ class FreeCellGame:
         #print(moves)
         moveCnt = 1
         for m in moves:
+            printf("movelist[%d]: %s\n", moveCnt, self.board.MoveList())
             #print("move: ", m)
             cards = self.board.compoundMove(m)
             #print("compoundMove: ", cards)

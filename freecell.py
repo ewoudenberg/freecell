@@ -248,6 +248,7 @@ class Board:
     CascadeNames = '123456789' + string.ascii_uppercase
 
     def __init__(self, seed, printer=TTY(), freecells=4, cascades=8, ignore_dependencies=False):
+        # Use the card glyphs for the foundation cells' location names.
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
