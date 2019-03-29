@@ -180,13 +180,13 @@ class Column(list):
     # How many cards in a row could we remove from this column?
     # (Only freecells and cascades have cards removed from them)
     def get_removable_amount(self):
-        # Provide a copy ourselves with a slice so we don't actually change.
-        return len(self.get_tableau(self[:]))
+        # Use a slice to make a copy of ourselves so we don't actually change.
+        return len(self.remove_tableau(self[:]))
 
-    def get_tableau(self, column, top_card=None):
+    def remove_tableau(self, column, top_card=None):
         tableau = []
         if column and column[-1].can_tableau(top_card):
-            tableau = self.get_tableau(column, column.pop())
+            tableau = self.remove_tableau(column, column.pop())
         if top_card:
             tableau.append(top_card)
         return tableau
