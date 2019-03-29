@@ -214,15 +214,11 @@ class Column(list):
 class ColumnGroup(list):
     def __init__(self, *args):
         list.__init__(self, *args)
-        self.column_lookup_table = {i.location: i for i in self}
 
     def find_column_for_card(self, card):
         for column in self:
             if column.can_accept_card(card):
                 return column
-
-    def get_column_for_location(self, location):
-        return self.column_lookup_table.get(location)
 
     def get_row_count(self):
         return max(len(column) for column in self)
@@ -332,6 +328,7 @@ class Board:
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, max_supermove_size)
+
         self.move_counter += 1
 
     # Hunt for cards on top of the cascades columns and in free cells that can
