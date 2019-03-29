@@ -225,20 +225,6 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(column) for column in self)
 
-class BoardSnapshot:
-    def __init__(self, board):
-        self.frees = copy.deepcopy(board.frees)
-        self.cascades = copy.deepcopy(board.cascades)
-        self.homes = copy.deepcopy(board.homes)
-        self.move_counter = board.move_counter
-
-    def restore(self, board):
-        board.frees = self.frees
-        board.cascades  = self.cascades
-        board.homes = self.homes
-        board.make_column_maps()
-        board.move_counter = self.move_counter
-
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
 
