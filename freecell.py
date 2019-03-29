@@ -314,8 +314,12 @@ class Board:
             raise UserException(f'Error, move "{move}" is not two characters')
 
         src, dst = move
+
         src_column = self.get_src_column(src)
-        card = src_column and src_column.peek_card_from_top()
+        if src_column is None:
+            raise UserException(f'No column at {src}')
+
+        card = src_column.peek_card_from_top()
         if not card:
             raise UserException(f'No card at {src}')
 
