@@ -266,17 +266,16 @@ class Board:
         for i, card in enumerate(deck):
             self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
 
+        self.src_column_map = {i.location: i for i in self.cascades + self.frees}
+        self.dst_column_map = {i.location: i for i in self.cascades + self.frees + self.homes}
+
     def is_empty(self):
         columns_in_use = sum(1 for i in self.frees + self.cascades if i)
         return columns_in_use == 0
 
-    # Find the correct column for the given source location.
     def get_src_column(self, location):
-        for group in self.frees, self.cascades:
-            column = group.get_column_for_location(location)
-            if column is not None:
-                return column
-
+        return self.src_column_map.get(location)
+        
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
         # Bonus feature: "#" serves to find any available FreeCell slot.
@@ -284,9 +283,9 @@ class Board:
             return self.frees.find_column_for_card(card)
 
         if location == 'h':
-            return self.homes.find_column_for_card(card)
+            location = card.glyph
 
-        return self.get_src_column(location)
+        return self.dst_column_map.get(location)
 
     # The public "move" interface that keeps a history and reports errors.
     def move(self, move, save_history=False):
