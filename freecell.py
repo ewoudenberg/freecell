@@ -88,8 +88,9 @@ class Card:
         self.color = 'red' if self.suit in 'DH' else 'black'
 
     # Can the new_card be on top of us (next lower rank, opposite color) in a tableau?
+    # (A tableau can always accept a non-existant card)
     def can_tableau(self, new_card):
-        return self.color != new_card.color and self.rank_index - 1 == new_card.rank_index
+        return not new_card or (self.color != new_card.color and self.rank_index - 1 == new_card.rank_index)
 
     # Can the new card be on top of us (next higher rank, same suit) in homes?
     def can_home(self, new_card):
@@ -177,20 +178,18 @@ class Column(list):
         return 0
 
     # How many cards in a row could we remove from this column?
-    # (Only used on freecells and cascades)
+    # (Only freecells and cascades have cards removed from them)
     def get_removable_amount(self):
-        run_length = 0
-        top_card = self.peek_card_from_top()
+        # Provide a copy ourselves with a slice so we don't actually change.
+        return len(self.get_tableau(self[:]))
+
+    def get_tableau(self, column, top_card=None):
+        tableau = []
+        if column and column[-1].can_tableau(top_card):
+            tableau = self.get_tableau(column, column.pop())
         if top_card:
-            run_length += 1
-            # Burrow into the column to find out how deep the cards cascade.
-            while True:
-                deeper_card = self.peek_card_from_top(run_length)
-                if not deeper_card or not deeper_card.can_tableau(top_card):
-                    break
-                top_card = deeper_card
-                run_length += 1
-        return run_length
+            tableau.append(top_card)
+        return tableau
 
     def peek_card_from_row(self, row):
         if row < len(self):
