@@ -236,11 +236,13 @@ class BoardSnapshot:
         board.frees = self.frees
         board.cascades  = self.cascades
         board.homes = self.homes
-        board.move_counter = self.move_counter
         board.make_column_maps()
+        board.move_counter = self.move_counter
 
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
+
+# The Freecell Board 
 
 class Board:
     FreeCellNames = 'abcdefgijklmnopqrstuvwxyz' # leaves out "h" (used for home)
