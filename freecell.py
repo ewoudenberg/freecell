@@ -177,6 +177,7 @@ class Column(list):
         return 0
 
     # How many cards in a row could we remove from this column?
+    # (Only used on freecells and cascades)
     def get_removable_amount(self):
         run_length = 0
         top_card = self.peek_card_from_top()
