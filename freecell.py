@@ -280,16 +280,12 @@ class Board:
     def get_dst_column(self, location, card):
         # Bonus feature: "#" serves to find any available FreeCell slot.
         if location == '#':
-            for i in self.frees:
-                if i.can_accept_card(card):
-                    return i
+            return self.frees.find_column_for_card(card)
 
-        if location != 'h':
-            return self.get_src_column(location)
+        if location == 'h':
+            return self.homes.find_column_for_card(card)
 
-        for i in self.homes:
-            if i.can_accept_card(card):
-                return i
+        return self.get_src_column(location)
 
     # The public "move" interface that keeps a history and reports errors.
     def move(self, move, save_history=False):
