@@ -239,6 +239,7 @@ class BoardSnapshot:
         board.cascades  = self.cascades
         board.homes = self.homes
         board.move_counter = self.move_counter
+        board.make_column_maps()
 
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
@@ -248,24 +249,27 @@ class Board:
     CascadeNames = '123456789' + string.ascii_uppercase
 
     def __init__(self, seed, printer=TTY(), freecells=4, cascades=8, ignore_dependencies=False):
+        if cascades < 1 or cascades > len(Board.CascadeNames) or \
+            freecells < 0 or freecells > len(Board.FreeCellNames):
+            raise Exception('Board initialization error')
+            
         # Use the card glyphs for the foundation cells' location names.
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
+        self.make_column_maps()        
+
         self.move_counter = 0
         self.history = []
         self.printer = printer
         self.ignore_dependencies = ignore_dependencies
 
-        if cascades < 1 or cascades > len(Board.CascadeNames) or \
-            freecells < 0 or freecells > len(Board.FreeCellNames):
-            raise Exception('Board initialization error')
-            
         # Go round-robin, placing cards from the shuffled deck in each column of the cascades.
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
             self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
 
+    def make_column_maps(self):
         self.src_column_map = {i.location: i for i in self.cascades + self.frees}
         self.dst_column_map = {i.location: i for i in self.cascades + self.frees + self.homes}
 
@@ -273,18 +277,14 @@ class Board:
         columns_in_use = sum(1 for i in self.frees + self.cascades if i)
         return columns_in_use == 0
 
+    # Find the correct source column given a location.
     def get_src_column(self, location):
         return self.src_column_map.get(location)
         
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
-        # Bonus feature: "#" serves to find any available FreeCell slot.
-        if location == '#':
-            return self.frees.find_column_for_card(card)
-
         if location == 'h':
             location = card.glyph
-
         return self.dst_column_map.get(location)
 
     # The public "move" interface that keeps a history and reports errors.
@@ -316,8 +316,8 @@ class Board:
         src, dst = move
 
         src_column = self.get_src_column(src)
-        if src_column is None:
-            raise UserException(f'No column at {src}')
+        if not src_column:
+            raise UserException(f'Illegal move {move}')
 
         card = src_column.peek_card_from_top()
         if not card:
