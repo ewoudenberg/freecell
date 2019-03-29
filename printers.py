@@ -80,6 +80,7 @@ class LinePrinter:
         self.end_block()
 
     def print_header(self, *args, **kwargs):
+        self.header = [] # Ignore any prior headers in LinePrinter mode
         self.header.extend(args)
 
     def end_block(self):
