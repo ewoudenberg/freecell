@@ -243,6 +243,8 @@ class BoardSnapshot:
 class UserException(Exception): pass
 
 # The Freecell Board 
+# Allows standard and non-standard frecell boards to be created and played.
+# Ignore_dependencies=True will allow the auto-mover to freely make legal moves to home.
 
 class Board:
     FreeCellNames = 'abcdefgijklmnopqrstuvwxyz' # leaves out "h" (used for home)
