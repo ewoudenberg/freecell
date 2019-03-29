@@ -162,7 +162,7 @@ class Column(list):
     # Can some cards from the given column be added to this column, given the amount
     # of supermove room?
     def can_accept_column(self, src_column, supermove_room):
-        return bool( self.get_column_move_size(src_column, supermove_room) )
+        return bool( self.get_column_move_size(src_column, supermove_room)
 
     # Find a legal move from the src column into ours and report 
     # the number of cards it involves. Return 0 if there isn't one.
