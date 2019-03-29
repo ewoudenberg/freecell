@@ -255,7 +255,7 @@ class Board:
             freecells < 0 or freecells > len(Board.FreeCellNames):
             raise Exception('Board initialization error')
             
-        # Use the card glyphs for the foundation cells' location names.
+        # Use the card glyphs for the foundation cells' real location names.
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
@@ -374,11 +374,21 @@ class Board:
         return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
 
     def snapshot(self):
-        self.history.append(BoardSnapshot(self))
+        self.history.append(self.get_state())
 
     def undo(self):
         if self.history:
-            self.history.pop().restore(self)
+            self.restore_state(self.history.pop())
+
+    def get_state(self):
+        return copy.deepcopy(dict(frees=self.frees, homes=self.homes, cascades=self.cascades, move_counter=self.move_counter))
+
+    def restore_state(self, state):
+        self.frees = state['frees']
+        self.homes = state['homes']
+        self.cascades = state['cascades']
+        self.move_counter = state['move_counter']
+        self.make_column_maps()
 
     def print(self):
         sheet = PrinterSheet()

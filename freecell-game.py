@@ -105,17 +105,16 @@ def play():
 
     while not board.is_empty():
 
+        
         # Try using any supplied input first
         move = moves and moves.pop(0).strip()
-        if move:
-            printer.print_header(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
+        is_supplied_move = bool(move)
 
-        # If that's exhausted, ask the user for input
-        else:
+        if not is_supplied_move:
+            # If that's exhausted, ask the user for input
             printer.flush()
             print('Your move? ', end='')
             move = input()
-            printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
 
         movesLog.write(move+'\n')
 
@@ -123,6 +122,11 @@ def play():
             board.undo()
             board.print()
             continue
+
+        if is_supplied_move:
+            printer.print_header(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
+        else:
+            printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
 
         valid = board.move(move, save_history=True)
         if not valid: 
@@ -133,8 +137,8 @@ def play():
         board.print()
 
         for move in board.automatic_moves():
-            board.move(move)
             printer.print_header(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
+            board.move(move)
             board.print()
 
     printer.flush()
