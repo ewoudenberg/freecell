@@ -299,7 +299,7 @@ class Board:
         if dst_column is None:
             raise UserException(f'Illegal move {move}')
 
-        movement_room = self.get_movement_room()
+        movement_room = self.get_movement_room(dst_column)
         if not dst_column.can_accept_column(src_column, movement_room):
             raise UserException(f'Illegal move {move}')
     
@@ -343,9 +343,9 @@ class Board:
 
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
-        movement_room = self.get_movement_room()
         for src in self.cascades + self.frees:
             for dst in self.cascades + self.frees + self.homes:
+                movement_room = self.get_movement_room(dst)
                 if dst.can_accept_column(src, movement_room):
                     dst_location = dst_map.get(dst.location, dst.location)
                     yield f'{src.location}{dst_location}'
@@ -363,10 +363,11 @@ class Board:
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
+    # However, the destination column, if empty, does not count as an empty
     # This function also incorporates the basic movement room alloted by the freecells.
-    def get_movement_room(self):
+    def get_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
-        empty_columns = sum(1 for i in self.cascades if not i)
+        empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
         supermove_room = int(math.pow((1 + empty_frees) * 2, empty_columns))
         return max(empty_frees + 1, supermove_room)
 
@@ -393,14 +394,15 @@ class Board:
     def print(self):
         sheet = PrinterSheet()
 
-        # Print the top guide (frees and homes locations)
-        for i in self.frees + self.homes:
-            sheet.print(f'{i.location}  ', end='')
-        sheet.print()
-
         # Print Frees and Homes
         for i in self.frees + self.homes:
             sheet.printcard(i.peek_card_on_top())
+        sheet.print()
+
+        # Print the top guide (frees and homes locations)
+        sheet.print(ansi.reset, end='')
+        for i in self.frees + self.homes:
+            sheet.print(f'{i.location}  ', end='')
         sheet.print()
 
         # Print the Cascade

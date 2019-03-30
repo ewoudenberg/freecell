@@ -9,9 +9,12 @@ import ansi
 
 from printers import TTY, LinePrinter, PrinterSheet
 from freecell import Board
+from games import Games
+
+Solved_Games = Games()
 
 def usage():
-    available_games = ', '.join(f'{i}' for i in Games.keys())
+    example_games = ', '.join(f'{i}' for i in list(Solved_Games.keys())[:20])
     print(f'''\nusage: freecell.py [options]
 
 Generate MS compatible Freecell deals and play them.
@@ -19,11 +22,12 @@ Generate MS compatible Freecell deals and play them.
     Options:
        -f or --freecells n - set number of freecells (0-{len(Board.FreeCellNames)} default: 4)
        -c or --cascades n - set number of cascades (1-{len(Board.CascadeNames)} default: 8)
-       -p or --play-back n - play back game number n (only these are avaialble: {available_games})
+       -p or --play-back n - play back game number n (e.g. {example_games})
+       -P play back all available solved games
        -g or --game n - play game n (default: {Opts.game})
        -F or --file <file> - take input from a file (default: keyboard)
        -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
-       -P or --possible-moves - show possible moves before waiting for user input
+       -M or --possible-moves - show possible moves before waiting for user input
        -h --help print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
@@ -36,21 +40,24 @@ Game features:
  o The game logs all user moves to the file "moves.log". These can be played back with the
    option "-F moves.log".
 
+FAILING GAMES:
+    ./freecell-game.py -P --skip 7,10,63,86,96,1072,1150,1734,2670,3294,3342,3349,3631 --jump 3294
+
 ''')
     sys.exit(1)
 
 class Options:
     def __init__(self):
         try:
-            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiP', 
+            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiMP', 
                     ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
-                     'help', 'ignore-dependencies', 'possible-moves'])
+                     'help', 'ignore-dependencies', 'possible-moves','skip=','jump='])
 
         except getopt.GetoptError as err:
                 print(f'*** {err} ***\n')
                 usage()
  
-        first_game = list(Games.keys())[0]
+        first_game = list(Solved_Games.keys())[0]
 
         self.freecells = 4
         self.cascades = 8
@@ -60,6 +67,9 @@ class Options:
         self.ignore_dependencies = False
         self.help = False
         self.possible_moves = False
+        self.play_all = False
+        self.skips = []
+        self.jump = 0
 
         for arg, val in optslist:
             if arg in ('--freecells', '-f'):
@@ -75,8 +85,14 @@ class Options:
                 self.input = val
             elif arg in ('--ignore-dependencies', '-i'):
                 self.ignore_dependencies = True
-            elif arg in ('--possible-moves', '-P'):
+            elif arg in ('--possible-moves', '-M'):
                 self.possible_moves = True
+            elif arg in ('-P',):
+                self.play_all = True
+            elif arg in ('--skip'):
+                self.skips = [int(i) for i in val.split(',')]
+            elif arg in ('--jump'):
+                self.jump = int(val)
             elif arg in ('-h', '--help'):
                 self.help = True
 
@@ -84,21 +100,22 @@ class Options:
             print('*** Cannot specify both --input and --playback ***')
             self.help = False
 
+Opts = Options()
+
 def print_possible_moves(board):
     print('Available moves: ', end='')
     for i in board.get_possible_moves():
         print(f'{i} ', end='')
     print()
 
-def play():
-    printer = LinePrinter()
+def freecell():
     moves = []
 
     if Opts.play_back:
-        if Opts.game not in Games:
+        if Opts.game not in Solved_Games:
             print(f'*** Game "{Opts.game}" not available for playback ***')
             usage()
-        moves = Games[Opts.game].split()
+        moves = Solved_Games[Opts.game]
 
     if Opts.input:
         if not os.path.exists(Opts.input):
@@ -106,15 +123,25 @@ def play():
             usage()
         moves = open(Opts.input).readlines()
 
-    movesLog = open('moves.log', 'w')
+    if Opts.play_all:
+        for i in Solved_Games:
+            if i > Opts.jump and i not in Opts.skips:
+                play(i, Solved_Games[i])
+    else:
+        play(Opts.game, moves)
 
-    board = Board(seed=Opts.game, printer=printer, 
+def play(seed, moves):
+    movesLog = open('moves.log', 'w')
+    printer = LinePrinter()
+
+    print(f'\n*** Game #{seed} ***\n')
+
+    board = Board(seed=seed, printer=printer, 
                   freecells=Opts.freecells, cascades=Opts.cascades,
                   ignore_dependencies=Opts.ignore_dependencies)
     board.print()
 
     while not board.is_empty():
-
         
         # Try using any supplied input first
         move = moves and moves.pop(0).strip()
@@ -155,49 +182,12 @@ def play():
 
     printer.flush()
         
-# A few solved games from https://freecellgamesolutions.com
-
-Games = {
-    10913: '''
-        26 76 72 72 5a 27 57 67 1b 61 41 4h 4h 
-        41 45 34 3c 6d 5b''',
-    26693: '''
-        8a	81	2b	26	72	4c	45	74	78	76
-        71	51	71	15	27	26	27	21	12	1d
-        17	12	17	18	3h	13	d3	b1	81	68
-        6b	5h	6h	68	2h	ch	21	32	3c	3d
-        38	43	52	85	86''',
-    29596: '''
-        7a	7b	3c	32	73	63	5d	57	46	42
-        47	c7	67	5c	57	d7	b5	45	4b	47
-        37	35	1d	14	34	24	c1	23	2c	28
-        21	24	26	b2	62	32	a4	13	18	16
-        1a	a1	c1	51	52	85	65	86	82	82
-        83	73	78''',
-    31465: '''
-        62	6a	1b	16	18	18	13	1c	61	6d
-        c6	a6	d6	4a	4c	41	4d	48	7h	6h
-        6h	d6	4d	b4	d4	18	7b	7h	57	5d
-        51	c5	75	7h	31	3c	3h	3h	34	c4
-        63	81	86	87	8c	85	8h	54	58	25
-        2d	2b''',
-    5468: '''
-        41 4a 42 4b 5c 54 c5 74 34 34 
-        72 71 a2 7a 74 b4 27 21 17 2b 
-        26 2c 2d d2 a2 12 36 13 1a 18 
-        14 a1 36 31 61 53 84 8a 81 87 
-        b7 87 8b 82 b8 38 63 61 67 6b 
-        65 c1 41 43 52        ''',
-}
-
-Opts = Options()
-
 def main():
     if Opts.help:
         usage()
 
     try:
-        play()
+        freecell()
     except Exception as e:
         print(f'*** {e} ***')
         usage()
