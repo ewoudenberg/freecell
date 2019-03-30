@@ -168,7 +168,11 @@ def play(seed, moves):
             printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
 
         valid = board.move(move, save_history=True)
-        if not valid: 
+        if not valid:
+            # If a supplied move is invalid, bail out.
+            if is_supplied_move:
+                printer.flush()
+                return
             # Skip automated moves after errors since otherwise an error 
             # at move 0 might allow automated moves to happen.
             continue

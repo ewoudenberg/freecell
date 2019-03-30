@@ -58,7 +58,10 @@ class Block(list):
 MARGIN = 2 # 2 columns between blocks
 
 def get_terminal_size():
-    rows_cols = os.popen('stty size', 'r').read().split()
+    rows_cols = os.popen('stty size 2>/dev/null', 'r').read().split()
+    # Handle the piped input case
+    if not rows_cols:
+        return (40, 120)
     return (int(i) for i in rows_cols)
 
 # LinePrinter prints freecell board sheets horiziontally, fitting as many

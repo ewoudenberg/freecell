@@ -429,6 +429,13 @@ d4 b4 5b 54 5d c5 d5 a5 15 16
 4d a1 41 5h 4h 4a 42 72 c4 84 
 84 87 8c b7 c7 57 25 d8 28
 
+#1072 from freecellgamesolutions.com
+3a	3b	7c	37	3d	38	58	28	35	73
+71	74	7d	d7	47	b7	2b	4h	6d	62
+63	65	8h	5h	5h	52	53	83	c3	15
+18	1c	15	18	16	d5	86	82	81	86
+76	41	21	4d	 	 
+
 #1136 Michael Keller Attempt: 6 
 12 1a 18 1b 13 17 37 1c b1 81 
 83 86 87 8b 8d a8 d8 68 3a 3d 
@@ -2614,6 +2621,12 @@ dh 45 5b 5c 53 56 52 54 c5 b5
 a8 28 27 c3 b7 2a 26 7h 6h 72 
 75 85 45 47 48 78 41 48 4b
 
+#21927 from freecellgamesolutions.com
+6a	65	85	8b	82	83	82	28	2c	25
+6d	3h	6h	62	68	3h	3h	dh	c3	46
+48	28	43	4c	34	3c	13	1b	73	72
+12	72	51	53	5d	5c	 	 	 
+
 #21944 Michael Keller (4th try) 
 7h 7a 8b 87 8c 83 b3 62 64 74 
 26 8b 87 b8 a8 2a 31 32 23 42 
@@ -3363,6 +3376,12 @@ b4 84 86 8c 81 84 64 c6 78 67
 34 3d 35 2a 42 43 23 a2 62 6a 
 6h 6b 6c b6 d6 4b 4d 4h 85 8h 
 48 b8 71 4a
+
+#31647 from freecellgamesolutions.com
+5a	26	25	35	82	86	53	54	85	1b
+16	1c	1d	14	78	71	c7	57	51	81
+d5	b8	28	28	34	35	75	78	62	68
+67	18	46	4b	47	41	31	43	65	
 
 #31713 Michael Keller (6th try) 
 4h 1a 16 15 a5 1a 61 17 18 4b 
