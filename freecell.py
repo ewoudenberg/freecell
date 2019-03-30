@@ -160,7 +160,7 @@ class Column(list):
             return top_card.can_home(new_card)
 
     # Can some cards from the given column be added to this column, given the amount
-    # of supermove room?
+    # of movement room?
     def can_accept_column(self, src_column, movement_room):
         return self.get_column_move_size(src_column, movement_room) != 0
 
@@ -181,14 +181,13 @@ class Column(list):
     # How many cards in a row could we remove from this column?
     # (Only freecells and cascades have cards removed from them)
     def get_removable_amount(self):
-        # Use a slice to pass in a copy of ourselves -- the original is untouched.
-        return len(self.remove_tableau(self[:]))
+        return len(self.get_tableau(self))
 
-    # Remove all the cards that constitute a tableau and return them.
-    def remove_tableau(self, column, top_card=None):
+    # Get all the cards that constitute a tableau from the given column.
+    def get_tableau(self, column, top_card=None):
         tableau = []
         if column and column[-1].can_tableau(top_card):
-            tableau = self.remove_tableau(column, column.pop())
+            tableau = self.get_tableau(column[:-1], column[-1])
         if top_card:
             tableau.append(top_card)
         return tableau
@@ -345,10 +344,10 @@ class Board:
                 break
 
     def get_possible_moves(self):
-        room = self.get_movement_room()
+        movement_room = self.get_movement_room()
         for src in self.cascades + self.frees:
             for dst in self.cascades + self.frees + self.homes:
-                if dst.can_accept_column(src, room):
+                if dst.can_accept_column(src, movement_room):
                     yield f'{src.location}{dst.location}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
