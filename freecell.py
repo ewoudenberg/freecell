@@ -147,7 +147,7 @@ class Column(list):
         if len(self) >= self.max_length:
             return False
 
-        top_card = self.peek_card_from_top()
+        top_card = self.peek_card_on_top()
 
         if self.cascade:
             if not top_card:
@@ -190,11 +190,11 @@ class Column(list):
             tableau.append(top_card)
         return tableau
 
-    def peek_card_from_row(self, row):
+    def peek_card_in_row(self, row):
         if row < len(self):
             return self[row]
 
-    def peek_card_from_top(self):
+    def peek_card_on_top(self):
         if len(self):
             return self[-1]
 
@@ -204,7 +204,7 @@ class Column(list):
         return cards
 
     def __repr__(self):
-        return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_from_top()}'
+        return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_on_top()}'
     
 # A ColumnGroup is a unifying container for the 3 distinct groups 
 # of columns (the cascades, the freecells and the foundations).
@@ -291,7 +291,7 @@ class Board:
         if src_column is None:
             raise UserException(f'Illegal move {move}')
 
-        card = src_column.peek_card_from_top()
+        card = src_column.peek_card_on_top()
         if not card:
             raise UserException(f'No card at {src}')
 
@@ -330,7 +330,7 @@ class Board:
     def automatic_moves(self):
         while True:
             for src_column in self.cascades + self.frees:
-                card = src_column.peek_card_from_top()
+                card = src_column.peek_card_on_top()
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
                     if home is not None:
@@ -400,13 +400,13 @@ class Board:
 
         # Print Frees and Homes
         for i in self.frees + self.homes:
-            sheet.printcard(i.peek_card_from_top())
+            sheet.printcard(i.peek_card_on_top())
         sheet.print()
 
         # Print the Cascade
         for row in range(self.cascades.get_row_count()):
             for col in self.cascades: 
-                sheet.printcard(col.peek_card_from_row(row))
+                sheet.printcard(col.peek_card_in_row(row))
             sheet.print()
         sheet.print(ansi.reset, end='')
 
