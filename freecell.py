@@ -346,8 +346,8 @@ class Board:
 
     def get_possible_moves(self):
         room = self.get_movement_room()
-        for src in self.src_column_map.values():
-            for dst in self.dst_column_map.values():
+        for src in self.cascades + self.frees:
+            for dst in self.cascades + self.frees + self.homes:
                 if dst.can_accept_column(src, room):
                     yield f'{src.location}{dst.location}'
 

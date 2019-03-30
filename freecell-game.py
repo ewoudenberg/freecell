@@ -90,7 +90,6 @@ def print_possible_moves(board):
         print(f'{i} ', end='')
     print()
 
-
 def play():
     printer = LinePrinter()
     moves = []
@@ -124,7 +123,6 @@ def play():
         if not is_supplied_move:
             # If that's exhausted, ask the user for input
             printer.flush()
-
             if Opts.possible_moves:
                 print_possible_moves(board)
             print('Your move? ', end='')
