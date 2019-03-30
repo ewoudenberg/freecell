@@ -232,7 +232,7 @@ class UserException(Exception): pass
 
 # The Freecell Board 
 # Allows standard and non-standard frecell boards to be created and played.
-# Ignore_dependencies=True will allow the auto-mover to freely make legal moves to home.
+# Ignore_dependencies=True freely allows the auto-mover to make any legal moves to home.
 
 class Board:
     FreeCellNames = 'abcdefgijklmnopqrstuvwxyz' # leaves out "h" (used for home)
@@ -327,7 +327,7 @@ class Board:
 
         return success
 
-    # Hunt for cards on top of the cascades columns and in free cells that can
+    # Hunt for cards on top of the cascades and in free cells that can
     # be moved home (unless there are other cards on the cascades that could cascade 
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
@@ -344,6 +344,14 @@ class Board:
             else:
                 break
 
+    def get_possible_moves(self):
+        room = self.get_movement_room()
+        for src in self.src_column_map.values():
+            for dst in self.dst_column_map.values():
+                if src.location != dst.location and \
+                    dst.can_accept_column(src, room):
+                    yield f'{src.location}{dst.location}'
+
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
     def is_card_needed(self, card):
@@ -357,11 +365,12 @@ class Board:
 
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    # This incorporates the basic movement room alloted by the freecells.
+    # This function also incorporates the basic movement room alloted by the freecells.
     def get_movement_room(self):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i)
-        return max(empty_frees + 1, int(math.pow((1 + empty_frees) * 2, empty_columns)))
+        supermove_room = int(math.pow((1 + empty_frees) * 2, empty_columns))
+        return max(empty_frees + 1, supermove_room)
 
     def snapshot(self):
         self.history.append(self.get_state())

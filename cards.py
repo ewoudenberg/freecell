@@ -139,7 +139,8 @@ class Pile(list):
         if not kind in ["tableau", "freecell", "foundation"]:
             raise("Pile: invalid kind")
         self.kind = kind
-        self.name = name
+        self.name = name # FIX add a unique name for foundations otherwise they are all "h"
+        self.movename = "" # what is currently the name becomes movename
         self.suit = suit # only used for foundations
 
     def isEmpty(self):
@@ -191,20 +192,23 @@ class Pile(list):
         #print(oc)
         return len(oc)
 
-    # how many cards can be moved from a tableau onto topCard
+    # The next two functions take their arguments in different orders. FIX FIX FIX
+    # how many cards can be moved from the src tableau self onto topCard dst
     def MatchingCards(self, topCard):
         oc = self.OrderedCards()
         if topCard == 0:
+            #printf("MatchingCards: ", oc)
             return len(oc)
         cnt = 1
         for card in oc:
             if rank(topCard) == rank(card) + 1 and color(topCard) != color(card):
-                break
+                #print("MatchingCards: ", cnt, topCard, oc)
+                return cnt
             cnt += 1
-        #print("MatchingCards: ", cnt, topCard, oc)
-        return cnt
+        #print("MatchingCards: ", 0, topCard, oc)
+        return 0
 
-    # can card be moved onto a pile
+    # can src card be moved onto a dst pile self
     def CanGoOnto(self, card):
         if self.kind == "freecell":
             return len(self) == 0
@@ -212,7 +216,7 @@ class Pile(list):
             # check if card can go to foundation
             return (rank(card) == 0 and suit(card) == self.suit) or (len(self) > 0 and rank(self.TopCard()) == rank(card) - 1 and suit(self.TopCard()) == suit(card))
         elif self.kind == "tableau":
-            return len(self) > 0 and rank(self.TopCard()) == rank(card) + 1 and color(self.TopCard()) != color(card)
+            return len(self) == 0 or (len(self) > 0 and rank(self.TopCard()) == rank(card) + 1 and color(self.TopCard()) != color(card))
         else: 
             raise("CanGoOnto: bad tableau")
 
@@ -384,71 +388,64 @@ class FreeCellBoard():
         return ret
 
 # list of possible moves in order of (my guess at) potential to lead to a solution
-# 1. tableau to foundation
-# 2. freecell to foundation
-# 3. tableau to freecell
-# 4. tableau to tableau
-# 5. freecell to tableau
+# 1. tableau to foundations
+# 2. freecells to foundations
+# 3. tableaux to tableaux
+# 4. freecells to tableaux
+# 5. tableaux to freecells
 # GOING TO IMPROVE THIS CODE, should be cartesian product but there is one execption
     def MoveList(self):
         moves = []
         ofc = self.OpenFreeCells()
 
         # 1. check tableau for moves to the foundations
-        for col in self.tableau:
-            card = col.TopCard()
-            for p in self.foundations:
-                if p.CanGoOnto(card):
-                    moves.append(MoveName(col, p))
+        for src in self.tableau:
+            card = src.TopCard()
+            for dst in self.foundations:
+                if dst.CanGoOnto(card):
+                    moves.append(MoveName(src, dst))
 
-        # 2. check freecells for moves to the tableau
-        for col in self.freecells:
-            card = col.TopCard()
-            for p in self.foundations:
-                if p.CanGoOnto(card):
-                    moves.append(MoveName(col, p))
+        # 2. check freecells for moves to the foundations
+        for src in self.freecells:
+            card = src.TopCard()
+            for dst in self.foundations:
+                if dst.CanGoOnto(card):
+                    moves.append(MoveName(src, dst))
 
-        # 3. check tableau for moves to the foundations
-        for col in self.tableau:
-            card = col.TopCard()
-            for p in self.freecells:
-                if p.CanGoOnto(card):
-                    moves.append(MoveName(col, p))
+        # 3. check tableau for moves to the empty tableau
+        for src in self.tableau:
+            card = src.TopCard()
+            moved  = False
+            for dst in self.tableau:
+                if dst.CanGoOnto(card):
+                    #printf("%s->%s: %d\n", src.name, dst.name, 1)
+                    moves.append(MoveName(src, dst))
+                    moved = True
+            for dst in self.tableau:
+                card = dst.TopCard()
+                cc = src.MatchingCards(card)
+                #printf("%s->%s: %d\n", src.name, dst.name, cc)
+                if not moved and cc > 0:
+                    moves.append(MoveName(src, dst))
 
-        # 4. check tableau for moves to the empty tableau FIX FIX FIX
-        # needs to handle the multiple cards case
-        for col in self.tableau:
-            card = col.TopCard()
-            for p in self.tableau:
-                if p.CanGoOnto(card):
-                    moves.append(MoveName(col, p))
+        # 4. check freecells for moves to the tableau
+        for src in self.freecells:
+            card = src.TopCard()
+            for dst in self.tableau:
+                if dst.CanGoOnto(card):
+                    moves.append(MoveName(src, dst)) 
 
-        # 5. check freecells for moves to the tableau
-        for col in self.freecells:
-            card = col.TopCard()
-            for p in self.tableau:
-                if p.CanGoOnto(card):
-                    moves.append(MoveName(col, p))
+        # 5. check tableau for moves to the foundations
+        for src in self.tableau:
+            card = src.TopCard()
+            for dst in self.freecells:
+                if dst.CanGoOnto(card):
+                    moves.append(MoveName(src, dst))        
 
         return moves
 
-
-
-
-#            #print(i, r, v, c, CardName(card))
-#            if len(self.foundations[s]) < 1 and r != 0:
-#                continue
-#            moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
-#            for i in ofc:
-#                moves.extend(self.possibleMoves(chr(ord("0") + cnt), card))
-
-        # check the freecells for cards that can be moved to foundations
-#       cnt = 0
-#      for deck in self.freecells:
-#            if len(deck) == 1:
-#               card = deck.TopCard()
-#                moves.extend(elf.possibleMoves(fc[cnt], card))
-#        return moves
+    def ValidMove(self, moves, move):
+        return move in moves
 
     # Determine how many cards could be placed beneath the supplied card and return that number.
     def dependsOn(self, card):
@@ -547,13 +544,13 @@ class FreeCellGame:
         self.board.PrintFancyBoard()
         #print(moves)
         moveCnt = 1
-        moves = []
         while True:
             printf("move[%d]: ", moveCnt)
             #print("move: ", m)
             move = input()
-            if not isValidSyntax(move):
-                print("move has invalid syntax")
+            moves = self.board.MoveList()
+            if not isValidSyntax(move) or not self.board.ValidMove(moves, move):
+                print("invalid move")
                 continue
             cards = self.board.compoundMove(move)
             #print("compoundMove: ", cards)
@@ -576,16 +573,20 @@ class FreeCellGame:
         toss = input()
         #print(moves)
         moveCnt = 1
-        for m in moves:
-            printf("movelist[%d]: %s\n", moveCnt, self.board.MoveList())
+        for move in moves:
+            #printf("movelist[%d]: %s\n", moveCnt, self.board.MoveList())
+            moves = self.board.MoveList()
+            if not isValidSyntax(move) or not self.board.ValidMove(moves, move):
+                print("invalid move")
+                continue
             #print("move: ", m)
-            cards = self.board.compoundMove(m)
+            cards = self.board.compoundMove(move)
             #print("compoundMove: ", cards)
             #self.autoMoves()
             #print("")
-            self.board.cmove(m, cards)
+            self.board.cmove(move, cards)
             #print("move(", moveCnt, "): ", m) fix fix fix
-            printf("move[%d]: %s\n", moveCnt, m)
+            printf("move[%d]: %s\n", moveCnt, move)
             #print("possible moves: ", self.board.MoveList())
             self.board.autoMoves()
             #print("")
@@ -594,6 +595,7 @@ class FreeCellGame:
             toss = input()
         return self.board
 
+# moves to solve game 10913
 moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
 def test():
     game = 10913
@@ -608,20 +610,5 @@ def play(game=10913):
     a = FreeCellGame()
     a.NewGame(game)
     a.PlayGame()
-
-def Test():
-    a = FreeCellGame()
-    a.NewGame(10913)
-    a.PrintBoard()
-    toss = input()
-    a.board.move("26")
-    a.PrintBoard()
-    a.board.move("1a")
-    a.PrintBoard()
-    a.board.move("1b")
-    a.PrintBoard()
-    a.board.move("8h")
-    a.PrintBoard()
-
 
 

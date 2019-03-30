@@ -23,6 +23,7 @@ Generate MS compatible Freecell deals and play them.
        -g or --game n - play game n (default: {Opts.game})
        -F or --file <file> - take input from a file (default: keyboard)
        -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
+       -P or --possible-moves - show possible moves before waiting for user input
        -h --help print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
@@ -41,9 +42,9 @@ Game features:
 class Options:
     def __init__(self):
         try:
-            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hi', 
+            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiP', 
                     ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
-                     'help', 'ignore-dependencies'])
+                     'help', 'ignore-dependencies', 'possible-moves'])
 
         except getopt.GetoptError as err:
                 print(f'*** {err} ***\n')
@@ -58,6 +59,7 @@ class Options:
         self.input = None
         self.ignore_dependencies = False
         self.help = False
+        self.possible_moves = False
 
         for arg, val in optslist:
             if arg in ('--freecells', '-f'):
@@ -73,6 +75,8 @@ class Options:
                 self.input = val
             elif arg in ('--ignore-dependencies', '-i'):
                 self.ignore_dependencies = True
+            elif arg in ('--possible-moves', '-P'):
+                self.possible_moves = True
             elif arg in ('-h', '--help'):
                 self.help = True
 
@@ -112,6 +116,11 @@ def play():
 
         if not is_supplied_move:
             # If that's exhausted, ask the user for input
+            if Opts.possible_moves:
+                print('Available moves: ', end='')
+                for i in board.get_possible_moves():
+                    print(f'{i} ', end='')
+                print()
             printer.flush()
             print('Your move? ', end='')
             move = input()
