@@ -344,11 +344,13 @@ class Board:
                 break
 
     def get_possible_moves(self):
+        dst_map = {i: 'h' for i in Card.Glyphs}
         movement_room = self.get_movement_room()
         for src in self.cascades + self.frees:
             for dst in self.cascades + self.frees + self.homes:
                 if dst.can_accept_column(src, movement_room):
-                    yield f'{src.location}{dst.location}'
+                    dst_location = dst_map.get(dst.location, dst.location)
+                    yield f'{src.location}{dst_location}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
