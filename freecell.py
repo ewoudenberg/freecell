@@ -167,27 +167,25 @@ class Column(list):
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, movement_room):
-        src_length = src_column.get_removable_amount()
+        src_tableau = src_column.get_tableau()
+        src_length = len(src_tableau)
         max_length = min(src_length, movement_room, self.max_length-len(self))
 
-        # Loop through possible xfers, trying the largest stretch of cards first
+        # Loop through source tableau, trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the tableau.
         for i in range(max_length, 0, -1):
-            card = src_column.peek_card_from_top(depth=i-1)
-            if self.can_accept_card(card):
+            if self.can_accept_card(src_tableau[-i]):
                 return i
         return 0
 
-    # How many cards in a row could we remove from this column?
-    # (Only freecells and cascades have cards removed from them)
-    def get_removable_amount(self):
-        return len(self.get_tableau(self))
+    # Get all the cards on top that constitute a tableau.
+    def get_tableau(self):
+        return self.get_tableau_inner(self)
 
-    # Get all the cards that constitute a tableau from the given column.
-    def get_tableau(self, column, top_card=None):
+    def get_tableau_inner(self, column, top_card=None):
         tableau = []
         if column and column[-1].can_tableau(top_card):
-            tableau = self.get_tableau(column[:-1], column[-1])
+            tableau = self.get_tableau_inner(column[:-1], column[-1])
         if top_card:
             tableau.append(top_card)
         return tableau
@@ -196,9 +194,9 @@ class Column(list):
         if row < len(self):
             return self[row]
 
-    def peek_card_from_top(self, depth=0):
-        if depth < len(self):
-            return self[-1-depth]
+    def peek_card_from_top(self):
+        if len(self):
+            return self[-1]
 
     def remove_top_cards(self, card_count):
         cards = self[-card_count:]
