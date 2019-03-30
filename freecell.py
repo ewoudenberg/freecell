@@ -348,8 +348,7 @@ class Board:
         room = self.get_movement_room()
         for src in self.src_column_map.values():
             for dst in self.dst_column_map.values():
-                if src.location != dst.location and \
-                    dst.can_accept_column(src, room):
+                if dst.can_accept_column(src, room):
                     yield f'{src.location}{dst.location}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
