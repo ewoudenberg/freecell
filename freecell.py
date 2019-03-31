@@ -167,7 +167,7 @@ class Column(list):
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, movement_room):
-        src_tableau = src_column.get_tableau()
+        src_tableau = src_column.peek_tableau()
         src_length = len(src_tableau)
         max_length = min(src_length, movement_room, self.max_length-len(self))
 
@@ -178,14 +178,14 @@ class Column(list):
                 return i
         return 0
 
-    # Get all the cards on top that constitute a tableau.
-    def get_tableau(self):
-        return self.get_tableau_inner(self)
+    # Get a list of all the cards on top that constitute a tableau.
+    def peek_tableau(self):
+        return self.peek_tableau_inner(self)
 
-    def get_tableau_inner(self, column, top_card=None):
+    def peek_tableau_inner(self, column, top_card=None):
         tableau = []
         if column and column[-1].can_tableau(top_card):
-            tableau = self.get_tableau_inner(column[:-1], column[-1])
+            tableau = self.peek_tableau_inner(column[:-1], column[-1])
         if top_card:
             tableau.append(top_card)
         return tableau
@@ -289,7 +289,7 @@ class Board:
 
         src_column = self.get_src_column(src)
         if src_column is None:
-            raise UserException(f'Illegal move {move}')
+            raise UserException(f'No such source {src}')
 
         card = src_column.peek_card_on_top()
         if not card:
@@ -297,7 +297,7 @@ class Board:
 
         dst_column = self.get_dst_column(dst, card)
         if dst_column is None:
-            raise UserException(f'Illegal move {move}')
+            raise UserException(f'No such destination {dst}')
 
         movement_room = self.get_movement_room(dst_column)
         if not dst_column.can_accept_column(src_column, movement_room):
@@ -367,8 +367,7 @@ class Board:
     def get_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
-        supermove_room = (1 + empty_frees) * int(math.pow(2, empty_columns))
-        return supermove_room
+        return (1 + empty_frees) * int(math.pow(2, empty_columns))
 
     def snapshot(self):
         self.history.append(self.get_state())
