@@ -270,6 +270,9 @@ class Board:
         
     # Find the correct destination column, given a location and card to place there.
     def get_dst_column(self, location, card):
+        # Bonus feature -- '#' finds a free freecell.
+        if location == '#':
+            return self.frees.find_column_for_card(card)
         if location == 'h':
             location = card.glyph
         return self.dst_column_map.get(location)
