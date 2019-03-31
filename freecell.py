@@ -364,12 +364,11 @@ class Board:
     # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
     # However, the destination column, if empty, does not count as an empty
-    # This function also incorporates the basic movement room alloted by the freecells.
     def get_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
-        supermove_room = int(math.pow((1 + empty_frees) * 2, empty_columns))
-        return max(empty_frees + 1, supermove_room)
+        supermove_room = (1 + empty_frees) * int(math.pow(2, empty_columns))
+        return supermove_room
 
     def snapshot(self):
         self.history.append(self.get_state())

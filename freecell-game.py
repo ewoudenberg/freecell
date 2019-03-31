@@ -172,6 +172,7 @@ def play(seed, moves):
             # If a supplied move is invalid, bail out.
             if is_supplied_move:
                 printer.flush()
+                print(f'Failed Game {seed}', file=sys.stderr)
                 return
             # Skip automated moves after errors since otherwise an error 
             # at move 0 might allow automated moves to happen.
