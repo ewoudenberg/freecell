@@ -2,7 +2,7 @@
 
 # This generates MS compatible Freecell deals and plays back solutions.
 
-# CC BY-SA 2019 E. Woudenberg (prompted by interest from Lawrence E. Bakst)
+# CC BY-SA 2019 E. Woudenberg (prompted by work from Lawrence E. Bakst)
 
 '''
 (Freecell Game Details from Wikipedia)
