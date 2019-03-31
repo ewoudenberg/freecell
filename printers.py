@@ -86,7 +86,7 @@ class LinePrinter:
         self.header = [] # Ignore any prior headers in LinePrinter mode
         self.header.extend(args)
 
-        def end_block(self):
+    def end_block(self):
         # Insert the header as the first row:
         self.current_block[0:0] = self.header or [''] # 'or' provide an empty header
         self.current_block.finalize()

@@ -11,7 +11,7 @@
             "cwd": "${workspaceFolder}",
             "pythonPath": "/Users/ericwoudenberg/Kai/venv3.6/bin/python",
             "program": "${workspaceFolder}/freecell-game.py",
-            //"args": ["-c", "35" ],
+            "args": ["-p", "1" ],
             "debugOptions": [
                 "RedirectOutput",
             ]
