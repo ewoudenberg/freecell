@@ -269,8 +269,8 @@ class Board:
         return self.src_column_map.get(location)
         
     # Find the correct destination column, given a location and card to place there.
+    # Special feature -- '#' as a destination finds the first available freecell.
     def get_dst_column(self, location, card):
-        # Bonus feature -- '#' finds a free freecell.
         if location == '#':
             return self.frees.find_column_for_card(card)
         if location == 'h':
@@ -344,6 +344,7 @@ class Board:
             else:
                 break
 
+    # Return all the moves curently allowed on the board.
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
         for src in self.cascades + self.frees:
