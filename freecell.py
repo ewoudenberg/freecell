@@ -137,10 +137,9 @@ class Column(list):
     # to ourselves, removing them from the source column.
     def add_cards_from_column(self, src_column, movement_room):
         card_count = self.get_column_move_size(src_column, movement_room)
-        if card_count:
-            source_cards = src_column.remove_top_cards(card_count)
-            for card in source_cards:
-                self.add_card(card)
+        source_cards = src_column.remove_top_cards(card_count)
+        for card in source_cards:
+            self.add_card(card)
 
     # Can the given card be legally added to this columm?
     def can_accept_card(self, new_card):
@@ -198,6 +197,8 @@ class Column(list):
             return self[-1]
 
     def remove_top_cards(self, card_count):
+        if not card_count:
+            GameException('Column.remove_top_cards botch -- card_count == 0')
         cards = self[-card_count:]
         self[-card_count:] = []
         return cards
