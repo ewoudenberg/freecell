@@ -217,7 +217,6 @@ class ColumnGroup(list):
         list.__init__(self, *args)
 
     # Return a column that can accept our card
-    # (Currently only used to find automatic moves to home)
     def find_column_for_card(self, card):
         for column in self:
             if column.can_accept_card(card):
@@ -284,7 +283,7 @@ class Board:
     # The "move" parameter is a two character string: <source><destination>
     # where <source> can be 1-8 (the cascades), a-d (the frees) and <destination>
     # can be all the source locations plus h (homes).
-    # Tis raises a UserException if the move is illegal in any way.
+    # This raises a UserException if the move is illegal in any way.
     
     def compound_move(self, move):
         if len(move) != 2:
