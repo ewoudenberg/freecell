@@ -345,7 +345,7 @@ class Board:
             else:
                 break
 
-    # Return all the moves curently allowed on the board.
+    # Return all the moves currently allowed on the board.
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
         for src in self.cascades + self.frees:
