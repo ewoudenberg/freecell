@@ -133,7 +133,7 @@ class Column(list):
     def add_card_from_dealer(self, card):
         self.append(card)
 
-    def  get_remaining_room(self):
+    def get_remaining_room(self):
         return self.max_length - len(self)
 
     # Find and move the legally correct number of cards from the source column
@@ -147,7 +147,7 @@ class Column(list):
 
     # Can the given card be legally added to this columm?
     def can_accept_card(self, new_card):
-        if self. get_remaining_room() == 0:
+        if self.get_remaining_room() == 0:
             return False
 
         top_card = self.peek_card_on_top()
@@ -172,7 +172,7 @@ class Column(list):
     def get_column_move_size(self, src_column, movement_room):
         src_tableau = src_column.peek_tableau()
         src_length = len(src_tableau)
-        max_length = min(src_length, movement_room, self. get_remaining_room())
+        max_length = min(src_length, movement_room, self.get_remaining_room())
 
         # Loop through source tableau, trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the tableau.
