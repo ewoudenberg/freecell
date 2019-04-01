@@ -114,7 +114,7 @@ class Column(list):
                                    CASCADE=dict(cascade=True, max_length=Infinite))
 
         if type not in type_configurations:
-            raise GameException(f'Column __init__ botch: unknown type "{type}"')
+            raise GameException(f'Column.__init__ botch: unknown type "{type}"')
                         
         self.location = location
         self.type = type
@@ -198,7 +198,7 @@ class Column(list):
 
     def remove_top_cards(self, card_count):
         if not card_count:
-            GameException('Column.remove_top_cards botch -- card_count == 0')
+            GameException('Column.remove_top_cards botch: card_count == 0')
         cards = self[-card_count:]
         self[-card_count:] = []
         return cards
