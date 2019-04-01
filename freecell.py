@@ -188,6 +188,15 @@ class Column(list):
             tableau.append(top_card)
         return tableau[::-1]
 
+    def peek_tableau(self):
+        column = self[:] # make a copy so we don't modify outselves.
+        tableau = []
+        top_card = None
+        while column and column[-1].can_tableau(top_card):
+            top_card = column.pop()
+            tableau.append(top_card)
+        return tableau[::-1]
+
     def peek_card_in_row(self, row):
         if row < len(self):
             return self[row]
