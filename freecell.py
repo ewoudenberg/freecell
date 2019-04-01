@@ -162,7 +162,7 @@ class Column(list):
     # Can some cards from the given column be added to this column, given the amount
     # of movement room?
     def can_accept_column(self, src_column, movement_room):
-        return not freecell_to_freecell and self.get_column_move_size(src_column, movement_room) != 0
+        return self.get_column_move_size(src_column, movement_room) != 0
 
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
