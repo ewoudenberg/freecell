@@ -348,12 +348,12 @@ class Board:
     # Return all the moves currently allowed on the board.
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
-        for src in self.src_column_map.values():
-            for dst in self.dst_column_map.values():
-                movement_room = self.get_movement_room(dst)
-                if dst.can_accept_column(src, movement_room):
-                    dst_location = dst_map.get(dst.location, dst.location)
-                    yield f'{src.location}{dst_location}'
+        for src_column in self.src_column_map.values():
+            for dst_column in self.dst_column_map.values():
+                movement_room = self.get_movement_room(dst_column)
+                if dst_column.can_accept_column(src_column, movement_room):
+                    dst_location = dst_map.get(dst_column.location, dst_column.location)
+                    yield f'{src_column.location}{dst_location}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
