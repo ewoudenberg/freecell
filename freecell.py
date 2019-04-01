@@ -98,10 +98,7 @@ class Card:
 
     def as_string(self, glyph=True):
         color_sequence = ansi.fg.__dict__[self.color]
-        if glyph:
-            return f'{color_sequence}{self.rank}{self.glyph} '
-        else:
-            return f'{color_sequence}{self.rank}{self.suit} '
+        return f'{color_sequence}{self.rank}{self.glyph if glyph else self.suit} '
 
     def __repr__(self): # for debugging
         return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
