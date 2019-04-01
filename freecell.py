@@ -37,6 +37,12 @@ import string
 
 from printers import TTY, PrinterSheet
 
+# An exception thrown on illegal user moves
+class UserException(Exception): pass
+
+# An exception thrown when the game has an internal error
+class GameException(Exception): pass
+
 # Create a deck of cards
 
 DECK_SIZE = 52
@@ -222,12 +228,6 @@ class ColumnGroup(list):
 
     def get_row_count(self):
         return max(len(column) for column in self)
-
-# An exception thrown on illegal user moves
-class UserException(Exception): pass
-
-# An exception thrown when the game has an internal error
-class GameException(Exception): pass
 
 # The Freecell Board 
 # Allows standard and non-standard frecell boards to be created and played.
