@@ -333,7 +333,7 @@ class Board:
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
-            for src_column in self.cascades + self.frees:
+            for src_column in self.src_column_map.values():
                 card = src_column.peek_card_on_top()
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
