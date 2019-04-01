@@ -1,8 +1,9 @@
 # Load the moves.txt file into a dictionary
 
 class Games(dict):
-    def __init__(self):
-        fd = open('moves.txt')
+    default_file='fixed_moves.txt'
+    def __init__(self, filename=default_file):
+        fd = open(filename)
         moves = ''
         game = None
         for i in fd.readlines():

@@ -6,6 +6,7 @@ import sys
 import os
 import getopt
 import ansi
+from collections import defaultdict
 
 from printers import TTY, LinePrinter, PrinterSheet
 from freecell import Board, GameException
@@ -23,11 +24,12 @@ Generate MS compatible Freecell deals and play them.
        -f or --freecells n - set number of freecells (0-{len(Board.FreeCellNames)} default: 4)
        -c or --cascades n - set number of cascades (1-{len(Board.CascadeNames)} default: 8)
        -p or --play-back n - play back game number n (e.g. {example_games})
-       -P play back all available solved games
+       -P - play back all available solved games
        -g or --game n - play game n (default: {Opts.game})
        -F or --file <file> - take input from a file (default: keyboard)
        -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
-       -M or --possible-moves - show possible moves before waiting for user input
+       -A or --available-moves - show possible moves before waiting for user input
+       -M or --moves-file - load moves from given file (default "{Games.default_file}")
        -h --help print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
@@ -48,10 +50,12 @@ FAILING GAMES:
 
 class Options:
     def __init__(self):
+        global Solved_Games
         try:
-            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiMP', 
+            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:', 
                     ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
-                     'help', 'ignore-dependencies', 'possible-moves','skip=','jump='])
+                     'help', 'ignore-dependencies', 'available-moves','skip=','jump=',
+                     '--moves-file='])
 
         except getopt.GetoptError as err:
                 print(f'*** {err} ***\n')
@@ -85,8 +89,10 @@ class Options:
                 self.input = val
             elif arg in ('--ignore-dependencies', '-i'):
                 self.ignore_dependencies = True
-            elif arg in ('--possible-moves', '-M'):
+            elif arg in ('--available-moves', '-A'):
                 self.possible_moves = True
+            elif arg in ('--moves-file', '-M'):
+                Solved_Games = Games(val)
             elif arg in ('-P',):
                 self.play_all = True
             elif arg in ('--skip'):
@@ -124,9 +130,15 @@ def freecell():
         moves = open(Opts.input).readlines()
 
     if Opts.play_all:
+        passings = defaultdict(bool)
         for i in Solved_Games:
             if i > Opts.jump and i not in Opts.skips:
-                play(i, Solved_Games[i])
+                result = play(i, Solved_Games[i])
+                passings[result] += 1
+
+        print(f'Number that completed {passings[True]}', file=sys.stderr)
+        print(f'Number that failed to complete {passings[False]}', file=sys.stderr)
+
     else:
         play(Opts.game, moves)
 
@@ -172,8 +184,8 @@ def play(seed, moves):
             # If a supplied move is invalid, bail out.
             if is_supplied_move:
                 printer.flush()
-                print(f'Failed Game {seed}', file=sys.stderr)
-                return
+                print(f'*** Failed Game #{seed} ***')
+                return False
             # Skip automated moves after errors since otherwise an error 
             # at move 0 might allow automated moves to happen.
             continue
@@ -186,6 +198,9 @@ def play(seed, moves):
             board.print()
 
     printer.flush()
+
+    print(f'\n*** Completed Game #{seed} ***\n')
+    return True        
         
 def main():
     if Opts.help:

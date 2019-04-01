@@ -348,8 +348,8 @@ class Board:
     # Return all the moves currently allowed on the board.
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
-        for src in self.cascades + self.frees:
-            for dst in self.cascades + self.frees + self.homes:
+        for src in self.src_column_map.values():
+            for dst in self.dst_column_map.values():
                 movement_room = self.get_movement_room(dst)
                 if dst.can_accept_column(src, movement_room):
                     dst_location = dst_map.get(dst.location, dst.location)
