@@ -180,15 +180,13 @@ class Column(list):
 
     # Get a list of all the cards on top that constitute a tableau.
     def peek_tableau(self):
-        return self.peek_tableau_inner(self)
-
-    def peek_tableau_inner(self, column, top_card=None):
+        column = self[:] # make a copy so we don't modify outselves.
         tableau = []
-        if column and column[-1].can_tableau(top_card):
-            tableau = self.peek_tableau_inner(column[:-1], column[-1])
-        if top_card:
+        top_card = None
+        while column and column[-1].can_tableau(top_card):
+            top_card = column.pop()
             tableau.append(top_card)
-        return tableau
+        return tableau[::-1]
 
     def peek_card_in_row(self, row):
         if row < len(self):
