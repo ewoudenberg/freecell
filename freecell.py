@@ -78,7 +78,7 @@ class Card:
 
     def __init__(self, number):
         if number < 1 or number > DECK_SIZE:
-            raise Exception(f'Card __init__ botch: {number} is not in range')
+            raise GameException(f'Card __init__ botch: {number} is not in range')
 
         number -= 1
         self.suit = Card.Suits[number % 4]
@@ -117,7 +117,7 @@ class Column(list):
                                    CASCADE=dict(cascade=True, max_length=Infinite))
 
         if type not in type_configurations:
-            raise Exception(f'Column __init__ botch: unknown type "{type}"')
+            raise GameException(f'Column __init__ botch: unknown type "{type}"')
                         
         self.location = location
         self.type = type
@@ -127,7 +127,7 @@ class Column(list):
     def add_card(self, card):
         if not self.can_accept_card(card):
             # We should never get here
-            raise Exception(f'Column.add_card botch: {card} cannot be added to {self}')
+            raise GameException(f'Column.add_card botch: {card} cannot be added to {self}')
         self.append(card)
 
     def add_card_from_dealer(self, card):
@@ -228,6 +228,9 @@ class ColumnGroup(list):
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
 
+# An exception thrown when the game has an internal error
+class GameException(Exception): pass
+
 # The Freecell Board 
 # Allows standard and non-standard frecell boards to be created and played.
 # Ignore_dependencies=True freely allows the auto-mover to make any legal moves to home.
@@ -239,7 +242,7 @@ class Board:
     def __init__(self, seed, printer=TTY(), freecells=4, cascades=8, ignore_dependencies=False):
         if cascades < 1 or cascades > len(Board.CascadeNames) or \
             freecells < 0 or freecells > len(Board.FreeCellNames):
-            raise Exception('Board initialization error')
+            raise GameException('Board initialization error')
             
         # Use the card glyphs for the foundation cells' real location names.
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)

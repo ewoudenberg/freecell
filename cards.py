@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
 # © Copyright 2019 Lawrence E. Bakst All Rights Reserved
 # The code here generates MS compatible Freecell deals and plays back solutions.
 # Soon to generate and evaluate moves to find solutions.
 
 import random
 import ansi
+import sys
+import re
 
 def printf(str, *args):
     print(str % args, end='')
@@ -318,12 +321,15 @@ class FreeCellBoard():
     def move(self, m, cnt=1):
         col, idx, home = GetCIH(m[0])
         #print(fm, to)
-        if m[1] == "h": # special case, move a card to it's home foundation 
-            card = self.tableau[col].Take()
+        if m[1] == "h": # special case, move a card to it's home foundation
+            if idx >= 0:
+                card = self.freecells[idx].Take()
+            else:
+                card = self.tableau[col].Take()
             self.foundations[suit(card)].Put(card)
         else:
             #get from card from freecell or tableau
-            if idx > -1:
+            if idx >= 0:
                 card = self.freecells[idx].Take() # Board[0][fm["idx"]].pop()
             else:
                 #print(self.board.tableau[fm["col"]])
@@ -532,9 +538,11 @@ foundations = ["h", "h", "h", "h"]
 class FreeCellGame:
     def __init__(self):
         self.board = FreeCellBoard(tableaux, freecells, foundations)
+        self.game = 0
 
 # Generate a new Freecell game and set up the board, game 5 is easy so it's the default
     def NewGame(self, game=5):
+        self.game = game
         self.board.Setup(game)
 
     def PrintBoard(self):
@@ -569,15 +577,16 @@ class FreeCellGame:
 
     #play moves and pause after each move and show the board
     def PlayMoves(self, moves):
+        print("game:", self.game, "is", len(moves), "moves")
         self.board.PrintFancyBoard()
         toss = input()
         #print(moves)
         moveCnt = 1
         for move in moves:
-            #printf("movelist[%d]: %s\n", moveCnt, self.board.MoveList())
+            printf("movelist[%d]: %s\n", moveCnt, self.board.MoveList())
             moves = self.board.MoveList()
             if not isValidSyntax(move) or not self.board.ValidMove(moves, move):
-                print("invalid move")
+                printf("%s is an invalid move\n", move)
                 continue
             #print("move: ", m)
             cards = self.board.compoundMove(move)
@@ -596,12 +605,50 @@ class FreeCellGame:
         return self.board
 
 # moves to solve game 10913
-moves = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
+
+
+moves94717719 = ["13", "6a", "56", "5b", "52", "51", "57", "5c", "65", "b6",
+    "78", "7b", "72", "78", "12", "4d", "74", "a7", "67", "62",
+    "37", "6a", "64", "c6", "a6", "1a", "24", "1c", "12", "17",
+    "14", "a1", "64", "34", "31", "46", "3a", "32", "36", "36",
+    "a3", "83", "5a", "5h", "75", "7h", "dh", "7d", "7h", "42",
+    "87", "d2", "37", "3d", "b3", "83", "8b", "d3", "8d", "8h",
+    "81", "84", "b8", "38", "78", "18", "4b", "4h", "1h", "b1",
+    "21", "24", "2b", "2h", "7h", "27", "2h", "3h", "b3", "43",
+    "47", "42", "48", "4b", "a4", "25", "c8", "2a", "2c", "2h",
+    "2d", "28"]
+
+games = {}
+def readMoveFile(filename):
+    cnt = 1
+    commentpat = re.compile("^(#)([0-9]+)")
+    movepat = re.compile("[1-8a-d][1-8a-dh]")
+    moves = []
+    game = ""
+    with open(filename, "r") as f:
+        for line in f:
+            m = commentpat.match(line)
+            if m:
+                games[game] = moves
+                moves = []
+                cnt += 1
+                #print(m.group(2))
+                game = m.group(2)
+            else:
+                m = movepat.findall(line)
+                if m:
+                    moves.extend(m)
+                    #print(m)
+    games[game] = moves
+    #print(games["4714"])
+    #print(games["31984"])
+    print(cnt, len(games), "games in file", filename)
+
 def test():
     game = 10913
     a = FreeCellGame()
     a.NewGame(game)
-    b = a.PlayMoves(moves)
+    b = a.PlayMoves(moves10913)
     if not b.Solved():
         printf("game %d, Not Solved\n", game)
     printf("game %d, Solved\n", game)
@@ -611,4 +658,55 @@ def play(game=10913):
     a.NewGame(game)
     a.PlayGame()
 
+def ParseArgs():
+    name = sys.argv[0]
+    args = sys.argv[1:]
+    nargs = len(args)
+    cnt = 0
+    game=10913
+    nflag = False # new gane
+    pflag = False # play moves
+    rflag = False # pick random game from file
 
+    #print(name, args, nargs)
+
+    def nextArg():
+        nonlocal cnt
+        if cnt < nargs:
+            cnt += 1
+            return args[cnt-1]
+        return None
+
+    a = FreeCellGame()
+    while True:
+        arg = nextArg() 
+        print("arg = ", arg)
+        if not arg: break
+        if arg == "-g":
+            game = nextArg()
+            print(game)
+            if not game: break
+            game = int(game)
+            print(game)
+        elif arg == "-p":
+            pflag += 1
+        elif arg == "-n":
+            nflag += 1
+        elif arg == "-r":
+            rflag += 1
+        else:
+            print("invalid switch")
+
+    if nflag:
+        a.NewGame(game)
+        a.PlayGame()
+    if pflag:
+        if rflag:
+            game = random.choice(list(games.keys()))
+        a.NewGame(int(game))
+        a.PlayMoves(games[str(game)])
+
+readMoveFile("moves.txt")
+moves10913 = ["26", "76", "72", "72", "5a", "27", "57", "67", "1b", "61", "41", "4h", "4h", "41", "45", "34", "3c","6d", "5b"]
+games["10913"] = moves10913
+ParseArgs()

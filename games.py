@@ -15,4 +15,4 @@ class Games(dict):
             else:
                 moves += i
 
-        self[game] = moves
+        self[game] = moves.split()

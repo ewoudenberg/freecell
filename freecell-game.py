@@ -8,7 +8,7 @@ import getopt
 import ansi
 
 from printers import TTY, LinePrinter, PrinterSheet
-from freecell import Board
+from freecell import Board, GameException
 from games import Games
 
 Solved_Games = Games()
@@ -193,8 +193,8 @@ def main():
 
     try:
         freecell()
-    except Exception as e:
-        print(f'*** {e} ***')
+    except GameException as e:
+        print(f'*** Internal Game Engine Error: {e} ***')
         usage()
 
 if __name__ == '__main__':
