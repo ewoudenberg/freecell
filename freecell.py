@@ -259,8 +259,8 @@ class Board:
             self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
 
     def make_column_maps(self):
-        self.src_column_map = {i.location: i for i in self.cascades + self.frees}
-        self.dst_column_map = {i.location: i for i in self.cascades + self.frees + self.homes}
+        self.src_columns = {i.location: i for i in self.cascades + self.frees}
+        self.dst_columns = {i.location: i for i in self.cascades + self.frees + self.homes}
 
     def is_empty(self):
         columns_in_use = sum(1 for i in self.frees + self.cascades if i)
@@ -268,7 +268,7 @@ class Board:
 
     # Find the correct source column given a location.
     def get_src_column(self, location):
-        return self.src_column_map.get(location)
+        return self.src_columns.get(location)
         
     # Find the correct destination column, given a location and card to place there.
     # Special feature -- '#' as a destination finds the first available freecell.
@@ -277,7 +277,7 @@ class Board:
             return self.frees.find_column_for_card(card)
         if location == 'h':
             location = card.glyph
-        return self.dst_column_map.get(location)
+        return self.dst_columns.get(location)
 
     # This moves cards between locations (cascades, frees, homes), attempting 
     # to move as many valid cards as it can on cascade-to-cascade moves.
@@ -334,7 +334,7 @@ class Board:
     # directly from them). Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
-            for src_column in self.src_column_map.values():
+            for src_column in self.src_columns.values():
                 card = src_column.peek_card_on_top()
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
@@ -349,8 +349,8 @@ class Board:
     # Return all the moves currently allowed on the board.
     def get_possible_moves(self):
         dst_map = {i: 'h' for i in Card.Glyphs}
-        for src_column in self.src_column_map.values():
-            for dst_column in self.dst_column_map.values():
+        for src_column in self.src_columns.values():
+            for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
                 if dst_column.can_accept_column(src_column, movement_room):
                     dst_location = dst_map.get(dst_column.location, dst_column.location)
@@ -362,7 +362,7 @@ class Board:
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
         if card.rank_index > Card.Ranks.index("2") and not self.ignore_dependencies:
-            for column in self.cascades + self.frees:
+            for column in self.src_columns.values():
                 for board_card in column:
                     if card.can_tableau(board_card):
                         return True
