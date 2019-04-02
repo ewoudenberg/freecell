@@ -178,9 +178,9 @@ class Column(list):
 
         # Loop through source tableau, trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the tableau.
-        for i in range(max_length, 0, -1):
-            if self.can_accept_card(src_tableau[-i]):
-                return i
+        for run_length in range(max_length, 0, -1):
+            if self.can_accept_card(src_tableau[-run_length]):
+                return run_length
         return 0
 
     # Get a list of all the cards on top that constitute a tableau.
