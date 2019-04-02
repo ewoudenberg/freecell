@@ -186,13 +186,11 @@ class Column(list):
 
     # Get a list of all the cards on top that constitute a tableau.
     def peek_tableau(self):
-        column = self[:] # make a copy so we don't modify outselves.
-        tableau = []
-        top_card = None
-        while column and column[-1].can_tableau(top_card):
-            top_card = column.pop()
-            tableau.append(top_card)
-        tableau.reverse()
+        tableau = Column(type='CASCADE')
+        for card in self:
+            if not tableau.can_accept_card(card):
+                tableau.clear()
+            tableau.add_card(card)
         return tableau
 
     def peek_card_in_row(self, row):
