@@ -336,9 +336,9 @@ class Board:
             for src_column in self.src_columns.values():
                 card = src_column.peek_card_on_top()
                 if card and not self.is_card_needed(card):
-                    home = self.homes.find_column_for_card(card)
-                    if home is not None:
-                        yield src_column.as_a_move_location + home.as_a_move_location
+                    dst_column = self.homes.find_column_for_card(card)
+                    if dst_column is not None:
+                        yield src_column.as_a_move_location + dst_column.as_a_move_location
                         break
             
             else: # After we've scanned all the columns without yielding a move, we're done.
