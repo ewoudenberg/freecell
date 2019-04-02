@@ -78,6 +78,7 @@ class Random:
             print('Caution! Random number generator FAILS to match MS compiler runtime')
 
 # Card is created with the MS card "number" 1-52
+
 class Card:
     Ranks = 'A23456789TJQK'
     Suits = 'CDHS'
@@ -130,7 +131,6 @@ class Column(list):
 
     def add_card(self, card):
         if not self.can_accept_card(card):
-            # We should never get here
             raise GameException(f'Column.add_card botch: {card} cannot be added to {self}')
         self.append(card)
 
@@ -213,8 +213,8 @@ class Column(list):
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_on_top()}'
     
-# A ColumnGroup is a unifying container for the 3 distinct groups 
-# of columns (the cascades, the freecells and the foundations).
+# A ColumnGroup is a unifying container for columns. There are 3 of 
+# them: one each for the cascades, the freecells and the foundations.
 # The constructor takes a list of columns.
 
 class ColumnGroup(list):
@@ -230,9 +230,9 @@ class ColumnGroup(list):
     def get_row_count(self):
         return max(len(column) for column in self)
 
-# The Freecell Board 
-# Allows standard and non-standard frecell boards to be created and played.
-# Ignore_dependencies=True freely allows the auto-mover to make any legal moves to home.
+# The Freecell Board, it allows standard and non-standard freecell 
+# boards to be created and played. Setting Ignore_dependencies=True
+# will allow the auto-mover to freely make any legal moves to home.
 
 class Board:
     FreeCellNames = 'abcdefgijklmnopqrstuvwxyz' # leaves out "h" (used for home)
@@ -283,8 +283,8 @@ class Board:
     # This moves cards between locations (cascades, frees, homes), attempting 
     # to move as many valid cards as it can on cascade-to-cascade moves.
     # The "move" parameter is a two character string: <source><destination>
-    # where <source> can be 1-8 (the cascades), a-d (the frees) and <destination>
-    # can be all the source locations plus h (homes).
+    # where <source> can be 1-35 (the cascades), a-z minus-h (the frees) 
+    # and <destination> can be all the source locations plus h (homes).
     # This raises a UserException if the move is illegal in any way.
     
     def compound_move(self, move):
@@ -306,6 +306,7 @@ class Board:
             raise UserException(f'No such destination {dst}')
 
         movement_room = self.get_movement_room(dst_column)
+
         if not dst_column.can_accept_column(src_column, movement_room):
             raise UserException(f'Illegal move {move}')
     
@@ -347,9 +348,11 @@ class Board:
             else:
                 break
 
+    # Map the actual dst columns to 'h'
+    dst_map = {i: 'h' for i in Card.Glyphs}
+
     # Return all the moves currently allowed on the board.
     def get_possible_moves(self):
-        dst_map = {i: 'h' for i in Card.Glyphs}
         for src_column in self.src_columns.values():
             for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
