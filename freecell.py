@@ -350,7 +350,7 @@ class Board:
             for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
                 if dst_column.can_accept_column(src_column, movement_room):
-                    yield f'{src_column.location}{dst_column.location_as_a_move}'
+                    yield f'{src_column.location_as_a_move}{dst_column.location_as_a_move}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
