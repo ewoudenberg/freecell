@@ -343,7 +343,7 @@ class Board:
             else: # After we've scanned all the columns without yielding a move, we're done.
                 break
 
-    # Map the actual dst columns to 'h'
+    # Map all the home column locations to 'h'
     home_map = {i: 'h' for i in Card.Glyphs}
 
     # Return all the moves currently allowed on the board.
