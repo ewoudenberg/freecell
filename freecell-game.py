@@ -130,7 +130,7 @@ def freecell():
         moves = open(Opts.input).readlines()
 
     if Opts.play_all:
-        passings = defaultdict(bool)
+        passings = defaultdict(int)
         for i in Solved_Games:
             if i > Opts.jump and i not in Opts.skips:
                 result = play(i, Solved_Games[i])
