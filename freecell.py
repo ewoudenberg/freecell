@@ -96,9 +96,8 @@ class Card:
         self.color = 'red' if self.suit in 'DH' else 'black'
 
     # Can the new_card be on top of us (next lower rank, opposite color) in a tableau?
-    # (A tableau can always accept a non-existant card)
     def can_tableau(self, new_card):
-        return not new_card or (self.color != new_card.color and self.rank_index - 1 == new_card.rank_index)
+        return self.color != new_card.color and self.rank_index - 1 == new_card.rank_index
 
     # Can the new card be on top of us (next higher rank, same suit) in homes?
     def can_home(self, new_card):
