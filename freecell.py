@@ -29,13 +29,14 @@ Moves
   this motion, but players using physical decks typically move the tableau at once.
 '''
 
-import random
-import ansi
-import math
 import copy
+import math
+import random
 import string
 
+import ansi
 from printers import TTY, PrinterSheet
+
 
 # An exception thrown on illegal user moves
 class UserException(Exception): pass

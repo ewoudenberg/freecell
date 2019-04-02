@@ -1,10 +1,12 @@
 # Implement TTY (scrolling) and LINE (horizontal) printers for Freecell boards
 
-import sys
-import re
 import os
-import ansi
+import re
+import sys
 from io import StringIO
+
+import ansi
+
 
 class PrinterSheet:
     def __init__(self):
@@ -119,5 +121,3 @@ class LinePrinter:
                 print(block.get_row(row) + ' '*MARGIN, end='')
             print()
         print()
-
-

@@ -2,15 +2,15 @@
 
 # User interface to the Freecell game engine
 
-import sys
-import os
 import getopt
-import ansi
+import os
+import sys
 from collections import defaultdict
 
-from printers import TTY, LinePrinter, PrinterSheet
+import ansi
 from freecell import Board, GameException
 from games import Games
+from printers import TTY, LinePrinter, PrinterSheet
 
 Solved_Games = Games()
 
