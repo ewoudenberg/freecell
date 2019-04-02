@@ -285,7 +285,7 @@ class Board:
     # and <destination> can be all the source locations plus h (homes).
     # This raises a UserException if the move is illegal in any way.
     
-    def compound_move(self, move):
+    def internal_move(self, move):
         if len(move) != 2:
             raise UserException(f'Error, move "{move}" is not two characters')
 
@@ -319,7 +319,7 @@ class Board:
 
         success = True
         try:
-            self.compound_move(move)
+            self.internal_move(move)
 
         except UserException as e:
             print(e)
