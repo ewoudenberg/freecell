@@ -343,9 +343,8 @@ class Board:
                     if home is not None:
                         yield src_column.location + 'h'
                         break
-
-            # After we've scanned all the columns without yielding a move, we're done.
-            else:
+            
+            else: # After we've scanned all the columns without yielding a move, we're done.
                 break
 
     # Map the actual dst columns to 'h'
