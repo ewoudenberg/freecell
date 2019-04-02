@@ -116,16 +116,14 @@ Infinite = float('Inf')
 class Column(list):
     def __init__(self, type=None, location=''):
         type_configurations = dict(FREECELL=dict(cascade=True, max_length=1),
-                                   HOME=dict(cascade=False, max_length=Infinite),
+                                   HOME=dict(cascade=False, max_length=Infinite, location_as_a_move='h'),
                                    CASCADE=dict(cascade=True, max_length=Infinite))
 
         if type not in type_configurations:
             raise GameException(f'Column.__init__ botch: unknown type "{type}"')
                         
+        self.location = self.location_as_a_move = location
         self.type = type
-        self.location = self.notation_location = location
-        if self.type == 'HOME':
-            self.notation_location = 'h'
 
         # Set our instance properties appropriately based on the column type.
         self.__dict__.update(type_configurations[type])
@@ -352,7 +350,7 @@ class Board:
             for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
                 if dst_column.can_accept_column(src_column, movement_room):
-                    yield f'{src_column.location}{dst_column.notation_location}'
+                    yield f'{src_column.location}{dst_column.location_as_a_move}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
