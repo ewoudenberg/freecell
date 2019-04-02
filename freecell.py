@@ -371,9 +371,9 @@ class Board:
                     if card.can_tableau(board_card):
                         return True
 
-    # From http://EzineArticles.com/104608 -- Allowed Supermove size is:
+    # The number of cards that can be moved at one time is given by:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
-    # However, the destination column, if empty, does not count as an empty
+    # (Tthe destination column, if empty, does not count as an empty)
     def get_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
