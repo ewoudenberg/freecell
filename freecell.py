@@ -273,7 +273,7 @@ class Board:
     def get_dst_column(self, location, card):
         if location == '#':
             return self.frees.find_column_for_card(card)
-        # Translate the home move location into its real column location
+        # Translate the "home" move location into its real column location
         if location == 'h':
             location = card.glyph
         return self.dst_columns.get(location)
