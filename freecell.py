@@ -176,7 +176,7 @@ class Column(list):
         src_length = len(src_tableau)
         max_length = min(src_length, movement_room, self.get_remaining_room())
 
-        # Loop through source tableau, trying the largest stretch of cards first
+        # Scan the source tableau, trying the largest stretch of cards first
         # since moves to an empty column can start from any card in the tableau.
         for run_length in range(max_length, 0, -1):
             if self.can_accept_card(src_tableau[-run_length]):
