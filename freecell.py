@@ -338,7 +338,7 @@ class Board:
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
                     if home is not None:
-                        yield src_column.location + 'h'
+                        yield src_column.as_a_move_location + 'h'
                         break
             
             else: # After we've scanned all the columns without yielding a move, we're done.
