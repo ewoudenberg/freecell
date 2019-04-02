@@ -30,7 +30,6 @@ Moves
 '''
 
 import copy
-import math
 import random
 import string
 
@@ -201,8 +200,8 @@ class Column(list):
             return self[-1]
 
     def remove_top_cards(self, card_count):
-        if not card_count:
-            GameException('Column.remove_top_cards botch: card_count == 0')
+        if card_count <= 0:
+            GameException('Column.remove_top_cards botch: card_count <= 0')
         cards = self[-card_count:]
         self[-card_count:] = []
         return cards
@@ -373,7 +372,7 @@ class Board:
     def get_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
-        return (1 + empty_frees) * int(math.pow(2, empty_columns))
+        return (1 + empty_frees) * 2**empty_columns
 
     def snapshot(self):
         self.history.append(self.get_state())
