@@ -174,10 +174,9 @@ def play(seed, moves):
             board.print()
             continue
 
-        if is_supplied_move:
-            printer.print_header(f'{ansi.fg.yellow}# {board.move_counter}. supplied-move: {move}{ansi.reset}')
-        else:
-            printer.print_header(f'{ansi.fg.green}# {board.move_counter}. manual-move: {move}{ansi.reset}')
+        move_type = 'supplied' if is_supplied_move else 'manual'
+        color = ansi.fg.yellow if is_supplied_move else ansi.fg.green
+        printer.print_header(f'{color}# {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
 
         valid = board.move(move, save_history=True)
         if not valid:
