@@ -41,7 +41,7 @@ from printers import TTY, PrinterSheet
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
 
-# An exception thrown when the game has an internal error
+# An exception thrown when the player has an internal error
 class GameException(Exception): pass
 
 # Create a deck of cards
