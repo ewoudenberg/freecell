@@ -338,7 +338,7 @@ class Board:
                 if card and not self.is_card_needed(card):
                     home = self.homes.find_column_for_card(card)
                     if home is not None:
-                        yield src_column.as_a_move_location + 'h'
+                        yield src_column.as_a_move_location + home.as_a_move_location
                         break
             
             else: # After we've scanned all the columns without yielding a move, we're done.
@@ -350,7 +350,7 @@ class Board:
             for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
                 if dst_column.can_accept_column(src_column, movement_room):
-                    yield f'{src_column.as_a_move_location}{dst_column.as_a_move_location}'
+                    yield src_column.as_a_move_location + dst_column.as_a_move_location
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
     # the card could become orphaned if it loses this card as its tableau parent)
