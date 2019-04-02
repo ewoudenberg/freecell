@@ -357,7 +357,7 @@ class Board:
             for dst_column in self.dst_columns.values():
                 movement_room = self.get_movement_room(dst_column)
                 if dst_column.can_accept_column(src_column, movement_room):
-                    dst_location = dst_map.get(dst_column.location, dst_column.location)
+                    dst_location = Board.dst_map.get(dst_column.location, dst_column.location)
                     yield f'{src_column.location}{dst_location}'
 
     # Is there a card on the board that this card could cascade onto? (Meaning that 
