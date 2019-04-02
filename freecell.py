@@ -239,7 +239,7 @@ class Board:
             freecells < 0 or freecells > len(Board.FreeCellNames):
             raise GameException('Board initialization error')
             
-        # Use the card glyphs for the foundation cells' real location names.
+        # Use the card glyphs for the foundation columns' real location names.
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
@@ -328,8 +328,8 @@ class Board:
         return success
 
     # Hunt for cards on top of the cascades and in free cells that can
-    # be moved home (unless there are other cards on the cascades that could cascade 
-    # directly from them). Generate moves to effect these changes.
+    # be moved home, avoiding ones that may still be depended upon.
+    # Generate moves to effect these changes.
     def automatic_moves(self):
         while True:
             for src_column in self.src_columns.values():
