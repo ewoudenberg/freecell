@@ -48,7 +48,7 @@ class GameException(Exception): pass
 DECK_SIZE = 52
 
 def NewDeck(n=DECK_SIZE):
-    return [Card(i) for i in range(1, n+1)]
+    return [Card(i) for i in range(n)]
 
 def GetShuffledDeck(seed):
     deck = NewDeck()
@@ -76,7 +76,7 @@ class Random:
         if first5 != [41, 18467, 6334, 26500, 19169]:
             print('Caution! Random number generator FAILS to match MS compiler runtime')
 
-# Card is created with the MS card "number" 1-52
+# Card is created with a card "number" 0-51
 
 class Card:
     Ranks = 'A23456789TJQK'
@@ -84,10 +84,9 @@ class Card:
     Glyphs = '♣♦♥♠'
 
     def __init__(self, number):
-        if number < 1 or number > DECK_SIZE:
+        if number < 0 or number >= DECK_SIZE:
             raise GameException(f'Card __init__ botch: {number} is not in range')
 
-        number -= 1
         self.suit = Card.Suits[number % 4]
         self.glyph = Card.Glyphs[number % 4]
         self.rank_index = number // 4
