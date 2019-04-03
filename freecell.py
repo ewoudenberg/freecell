@@ -36,7 +36,6 @@ import string
 import ansi
 from printers import TTY, PrinterSheet
 
-
 # An exception thrown on illegal user moves
 class UserException(Exception): pass
 
@@ -303,8 +302,9 @@ class Board:
             raise UserException(f'No such destination {dst}')
 
         movement_room = self.get_movement_room(dst_column)
+        is_valid_move = dst_column.can_accept_column(src_column, movement_room)
 
-        if not dst_column.can_accept_column(src_column, movement_room):
+        if not is_valid_move:
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, movement_room)
