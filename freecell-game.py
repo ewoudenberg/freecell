@@ -31,7 +31,7 @@ Generate MS compatible Freecell deals and play them.
        -A or --available-moves - show possible moves before waiting for user input
        -M or --moves-file - load moves from given file (default "{Games.default_file}")
        -t or --tty - use tty printer (default line printer)
-       -h --help print this help sheet
+       -h or --help - print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
 Game features:
@@ -74,7 +74,6 @@ class Options:
                 self.help = True
                 return
  
-
         for arg, val in optslist:
             if arg in ('--freecells', '-f'):
                 self.freecells = int(val)
@@ -106,7 +105,6 @@ class Options:
 
         if self.input and self.play_back:
             print('*** Cannot specify both --input and --playback ***')
-            self.help = False
 
 Opts = Options()
 
