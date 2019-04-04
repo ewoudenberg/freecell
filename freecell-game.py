@@ -160,7 +160,7 @@ def play(seed, moves):
         is_supplied_move = bool(move)
 
         if not is_supplied_move:
-            # If that's exhausted, ask the user for input
+            # If supplied input is exhausted, ask the user for input
             printer.flush()
             if Opts.possible_moves:
                 print_possible_moves(board)
@@ -178,7 +178,7 @@ def play(seed, moves):
         color = ansi.fg.yellow if is_supplied_move else ansi.fg.green
         printer.print_header(f'{color}# {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
 
-        valid = board.move(move, save_history=True)
+        valid = board.move(move, save_history=not is_supplied_move)
         if not valid:
             # If a supplied move is invalid, bail out.
             if is_supplied_move:
