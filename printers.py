@@ -113,8 +113,8 @@ class LinePrinter:
         free_columns = self.cols
         to_print = []
         while self.blocks:
-            block_cols = self.blocks[0].cols + MARGIN
-            free_columns -= block_cols
+            block_columns = self.blocks[0].cols + MARGIN
+            free_columns -= block_columns
             if free_columns < 0:
                 break
             to_print.append(self.blocks.pop(0))
