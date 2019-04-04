@@ -48,21 +48,11 @@ Game features:
 class Options:
     def __init__(self):
         global Solved_Games
-        try:
-            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:t', 
-                    ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
-                     'help', 'ignore-dependencies', 'available-moves','skip=','jump=',
-                     '--moves-file=', '-tty'])
-
-        except getopt.GetoptError as err:
-                print(f'*** {err} ***\n')
-                usage()
- 
-        first_game = list(Solved_Games.keys())[0]
 
         self.freecells = 4
         self.cascades = 8
         self.play_back = False
+        first_game = list(Solved_Games.keys())[0]
         self.game = first_game
         self.input = None
         self.ignore_dependencies = False
@@ -72,6 +62,18 @@ class Options:
         self.skips = []
         self.jump = 0
         self.tty = False
+
+        try:
+            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:t', 
+                    ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
+                     'help', 'ignore-dependencies', 'available-moves','skip=','jump=',
+                     '--moves-file=', '-tty'])
+
+        except getopt.GetoptError as err:
+                print(f'\n*** {err} ***\n')
+                self.help = True
+                return
+ 
 
         for arg, val in optslist:
             if arg in ('--freecells', '-f'):

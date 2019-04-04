@@ -41,8 +41,7 @@ class TTY:
         self.print_lines(sheet.get_lines())
 
     def print_header(self, *args, **kwargs):
-        print()
-        print(*args, **kwargs)
+        print('\n', *args, **kwargs)
         
 Ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
