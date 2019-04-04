@@ -24,12 +24,13 @@ Generate MS compatible Freecell deals and play them.
        -f or --freecells n - set number of freecells (0-{len(Board.FreeCellNames)} default: 4)
        -c or --cascades n - set number of cascades (1-{len(Board.CascadeNames)} default: 8)
        -p or --play-back n - play back game number n (e.g. {example_games})
-       -P - play back all available solved games
+       -P - play back all available solved games in moves file.
        -g or --game n - play game n (default: {Opts.game})
        -F or --file <file> - take input from a file (default: keyboard)
        -i or --ignore-dependencies - make the auto-mover ignore dependencies on other cards on the board
        -A or --available-moves - show possible moves before waiting for user input
        -M or --moves-file - load moves from given file (default "{Games.default_file}")
+       -t or --tty - use tty printer (default line printer)
        -h --help print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
@@ -41,10 +42,6 @@ Game features:
  o Use the single character "u" to undo a move.
  o The game logs all user moves to the file "moves.log". These can be played back with the
    option "-F moves.log".
-
-FAILING GAMES:
-    ./freecell-game.py -P --skip 7,10,63,86,96,1072,1150,1734,2670,3294,3342,3349,3631 --jump 3294
-
 ''')
     sys.exit(1)
 
@@ -52,10 +49,10 @@ class Options:
     def __init__(self):
         global Solved_Games
         try:
-            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:', 
+            optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:t', 
                     ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
                      'help', 'ignore-dependencies', 'available-moves','skip=','jump=',
-                     '--moves-file='])
+                     '--moves-file=', '-tty'])
 
         except getopt.GetoptError as err:
                 print(f'*** {err} ***\n')
@@ -74,6 +71,7 @@ class Options:
         self.play_all = False
         self.skips = []
         self.jump = 0
+        self.tty = False
 
         for arg, val in optslist:
             if arg in ('--freecells', '-f'):
@@ -99,7 +97,9 @@ class Options:
                 self.skips = [int(i) for i in val.split(',')]
             elif arg in ('--jump'):
                 self.jump = int(val)
-            elif arg in ('-h', '--help'):
+            elif arg in ('--tty', '-t'):
+                self.tty = True
+            elif arg in ('--help', '-h'):
                 self.help = True
 
         if self.input and self.play_back:
@@ -144,7 +144,7 @@ def freecell():
 
 def play(seed, moves):
     movesLog = open('moves.log', 'w')
-    printer = LinePrinter()
+    printer = TTY() if Opts.tty else LinePrinter() 
 
     print(f'\n*** Game #{seed} ***\n')
 
