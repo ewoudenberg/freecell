@@ -184,6 +184,7 @@ class Column(list):
     # Get a list of all the cards on top that constitute a tableau.
     def peek_tableau(self):
         tableau = Column(type='CASCADE')
+        # Examine each card in bottom-to-top order:
         for card in self:
             if not tableau.can_accept_card(card):
                 tableau.clear()
@@ -335,7 +336,7 @@ class Board:
         while True:
             for src_column in self.src_columns.values():
                 card = src_column.peek_card_on_top()
-                if card and not self.is_card_needed(card):
+                if card and self.card_is_safe_to_move(card):
                     dst_column = self.homes.find_column_for_card(card)
                     if dst_column is not None:
                         yield src_column.as_a_move_location + dst_column.as_a_move_location
@@ -352,16 +353,17 @@ class Board:
                 if dst_column.can_accept_column(src_column, movement_room):
                     yield src_column.as_a_move_location + dst_column.as_a_move_location
 
-    # Is there a card on the board that this card could cascade onto? (Meaning that 
-    # the card could become orphaned if it loses this card as its tableau parent)
-    def is_card_needed(self, card):
+    # Is there no card on the board that could follow this card in a tableau?
+    # (Such a card could become orphaned if it loses this card as its tableau base)
+    def card_is_safe_to_move(self, card):
         # We ignore Aces or 2s as possible dependents. Aces will never depend on 
         # 2s because they move directly to home. Someone told me we can also ignore 2s.
         if card.rank_index > Card.Ranks.index("2") and not self.ignore_dependencies:
             for column in self.src_columns.values():
                 for board_card in column:
                     if card.can_tableau(board_card):
-                        return True
+                        return False
+        return True
 
     # The number of cards that can be moved at one time is given by:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
