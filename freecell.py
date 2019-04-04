@@ -200,8 +200,8 @@ class Column(list):
             return self[-1]
 
     def remove_top_cards(self, card_count):
-        if card_count <= 0:
-            GameException('Column.remove_top_cards botch: card_count <= 0')
+        if card_count < 1:
+            GameException('Column.remove_top_cards botch: card_count < 1')
         cards = self[-card_count:]
         self[-card_count:] = []
         return cards
