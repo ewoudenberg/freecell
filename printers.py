@@ -7,6 +7,8 @@ from io import StringIO
 
 import ansi
 
+# PrinterSheet offers a print (and printcard) function that stores all printed output 
+# in a string for later retrieval as lines.
 
 class PrinterSheet:
     def __init__(self):
@@ -44,8 +46,12 @@ class TTY:
         
 Ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
+# Find the length of a line as printed (ignoring the Ansi markup characters).
+
 def get_printing_length(line):
     return len(Ansi_escape.sub('', line))
+
+# A Block is a single game-board's worth of output lines, to be tiled horizontally.
 
 class Block(list): 
     def finalize(self):
@@ -67,8 +73,7 @@ def get_terminal_size():
     return (int(i) for i in rows_cols)
 
 # LinePrinter prints freecell board sheets horiziontally, fitting as many
-# as possible within the terminal window before moving to
-# the next row.
+# as possible within the terminal window before moving to the next row.
 
 class LinePrinter:
     def __init__(self):
@@ -85,8 +90,7 @@ class LinePrinter:
         self.end_block()
 
     def print_header(self, *args, **kwargs):
-        self.header = [] # Ignore any prior headers in LinePrinter mode
-        self.header.extend(args)
+        self.header = args
 
     def end_block(self):
         # Insert the header as the first row:
