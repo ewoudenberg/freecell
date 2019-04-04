@@ -85,6 +85,8 @@ class LinePrinter:
     def print_lines(self, lines):
         self.current_block.extend(lines)
 
+    # Printing a sheet "finalizes" the block for printing, so only one
+    # sheet can appear in a block.
     def print_sheet(self, sheet: PrinterSheet):
         self.current_block.extend(sheet.get_lines())
         self.end_block()
@@ -108,13 +110,13 @@ class LinePrinter:
             self.belo_horizonte(blocks_that_fit)
 
     def get_blocks_that_fit(self):
-        col_budget = self.cols
+        free_columns = self.cols
         to_print = []
         while self.blocks:
             block_cols = self.blocks[0].cols + MARGIN
-            if block_cols > col_budget:
+            free_columns -= block_cols
+            if free_columns < 0:
                 break
-            col_budget -= block_cols
             to_print.append(self.blocks.pop(0))
         return to_print
 
