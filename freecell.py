@@ -184,7 +184,7 @@ class Column(list):
     # Get a list of all the cards on top that constitute a tableau.
     def peek_tableau(self):
         tableau = Column(type='CASCADE')
-        # Examine each card in bottom-to-top order:
+        # Examine each card of the column in bottom-to-top order:
         for card in self:
             if not tableau.can_accept_card(card):
                 tableau.clear()
@@ -280,7 +280,7 @@ class Board:
     # This moves cards between locations (cascades, frees, homes), attempting 
     # to move as many valid cards as it can on cascade-to-cascade moves.
     # The "move" parameter is a two character string: <source><destination>
-    # where <source> can be 1-35 (the cascades), a-z minus-h (the frees) 
+    # where <source> can be 1-35 (the cascades), a-gi-z (the frees) 
     # and <destination> can be all the source locations plus h (homes).
     # This raises a UserException if the move is illegal in any way.
     
