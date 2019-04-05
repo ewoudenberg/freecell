@@ -60,7 +60,8 @@ class Block(list):
     def get_row(self, row):
         if row >= len(self):
             return ' '*self.cols
-        return self[row] + (' ' * (self.cols - get_printing_length(self[row])))
+        row_cols = get_printing_length(self[row])
+        return self[row] + (self.cols - row_cols) * ' '
 
 MARGIN = 2 # 2 columns between blocks
 
