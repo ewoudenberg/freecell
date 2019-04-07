@@ -137,10 +137,8 @@ class Column(list):
     def get_remaining_room(self):
         return self.max_length - len(self)
 
-    # Find and move the legally correct number of cards from the source column
-    # to ourselves, removing them from the source column.
-    def add_cards_from_column(self, src_column, movement_room):
-        card_count = self.get_column_move_size(src_column, movement_room)
+    # Remove cards from the source column and add them to ourself.
+    def add_cards_from_column(self, src_column, card_count):
         source_cards = src_column.remove_top_cards(card_count)
         for card in source_cards:
             self.add_card(card)
@@ -303,12 +301,12 @@ class Board:
             raise UserException(f'No such destination {dst}')
 
         movement_room = self.get_movement_room(dst_column)
-        is_valid_move = dst_column.can_accept_column(src_column, movement_room)
+        movable_cards = dst_column.get_column_move_size(src_column, movement_room)
 
-        if not is_valid_move:
+        if movable_cards == 0:
             raise UserException(f'Illegal move {move}')
     
-        dst_column.add_cards_from_column(src_column, movement_room)
+        dst_column.add_cards_from_column(src_column, movable_cards)
 
         self.move_counter += 1
 
