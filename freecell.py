@@ -172,9 +172,9 @@ class Column(list):
         src_length = len(src_cards)
         max_length = min(src_length, movement_room, self.get_remaining_room())
 
-        # Scan the source cards for a card we can accept, starting with 
-        # the largest stretch of cards first since moves to an empty column 
-        # can start from any card in the tableau.
+        # Scan the source cards for a card we can accept, trying
+        # the largest run of cards first since moves to an empty column 
+        # can start from any card in a tableau.
         for run_length in range(max_length, 0, -1):
             if self.can_accept_card(src_cards[-run_length]):
                 return run_length
