@@ -168,19 +168,20 @@ class Column(list):
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
     def get_column_move_size(self, src_column, movement_room):
-        src_tableau = src_column.peek_tableau()
-        src_length = len(src_tableau)
+        src_cards = src_column.peek_movable_cards()
+        src_length = len(src_cards)
         max_length = min(src_length, movement_room, self.get_remaining_room())
 
-        # Scan the source tableau, trying the largest stretch of cards first
-        # since moves to an empty column can start from any card in the tableau.
+        # Scan the source cards for a card we can accept, starting with 
+        # the largest stretch of cards first since moves to an empty column 
+        # can start from any card in the tableau.
         for run_length in range(max_length, 0, -1):
-            if self.can_accept_card(src_tableau[-run_length]):
+            if self.can_accept_card(src_cards[-run_length]):
                 return run_length
         return 0
 
-    # Get a list of all the cards on top that constitute a tableau.
-    def peek_tableau(self):
+    # Get a list of all the cards that could be removed from the top of a column.
+    def peek_movable_cards(self):
         tableau = Column(type='CASCADE')
         # Examine each card of the column in bottom-to-top order:
         for card in self:

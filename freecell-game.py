@@ -31,6 +31,7 @@ Generate MS compatible Freecell deals and play them.
        -A or --available-moves - show possible moves before waiting for user input
        -M or --moves-file - load moves from given file (default "{Games.default_file}")
        -t or --tty - use tty printer (default line printer)
+       --no-automoves - turn off automover
        -h or --help - print this help sheet
     Try e.g. "{sys.argv[0]} -p {Opts.game}" to run with a builtin game
 
@@ -62,12 +63,13 @@ class Options:
         self.skips = []
         self.jump = 0
         self.tty = False
+        self.no_automoves = False
 
         try:
             optslist, self.argv = getopt.getopt(sys.argv[1:], 'f:c:p:g:F:hiPAM:t', 
                     ['freecells=', 'cascades=', 'play-back=', 'game=', 'file=',
                      'help', 'ignore-dependencies', 'available-moves','skip=','jump=',
-                     '--moves-file=', '-tty'])
+                     'moves-file=', 'tty','no-automoves'])
 
         except getopt.GetoptError as err:
                 print(f'\n*** {err} ***\n')
@@ -100,6 +102,8 @@ class Options:
                 self.jump = int(val)
             elif arg in ('--tty', '-t'):
                 self.tty = True
+            elif arg in ('--no-automoves',):
+                self.no_automoves = True
             elif arg in ('--help', '-h'):
                 self.help = True
 
@@ -191,10 +195,11 @@ def play(seed, moves):
 
         board.print()
 
-        for move in board.automatic_moves():
-            printer.print_header(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
-            board.move(move)
-            board.print()
+        if not Opts.no_automoves:
+            for move in board.automatic_moves():
+                printer.print_header(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
+                board.move(move)
+                board.print()
 
     printer.flush()
 
