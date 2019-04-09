@@ -29,7 +29,6 @@ Moves
   this motion, but players using physical decks typically move the tableau at once.
 '''
 
-import copy
 import random
 import string
 
@@ -205,6 +204,12 @@ class Column(list):
         self[-card_count:] = []
         return cards
 
+    # Used by undo; move cards from ourself onto another column
+    def move_top_cards_onto(self, dst_column, card_count):
+        cards = self.remove_top_cards(card_count)
+        for card in cards:
+            dst_column.add_card_from_dealer(card)
+
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_on_top()}'
     
@@ -242,7 +247,9 @@ class Board:
         self.homes = ColumnGroup(Column(type='HOME', location=i) for i in Card.Glyphs)
         self.frees = ColumnGroup(Column(type='FREECELL', location=i) for i in Board.FreeCellNames[:freecells])
         self.cascades = ColumnGroup(Column(type='CASCADE', location=i) for i in Board.CascadeNames[:cascades])
-        self.make_column_maps()        
+
+        self.src_columns = {i.location: i for i in self.cascades + self.frees}
+        self.dst_columns = {i.location: i for i in self.cascades + self.frees + self.homes}
 
         self.move_counter = 0
         self.history = []
@@ -253,10 +260,6 @@ class Board:
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
             self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
-
-    def make_column_maps(self):
-        self.src_columns = {i.location: i for i in self.cascades + self.frees}
-        self.dst_columns = {i.location: i for i in self.cascades + self.frees + self.homes}
 
     def is_empty(self):
         columns_in_use = sum(1 for i in self.frees + self.cascades if i)
@@ -283,7 +286,7 @@ class Board:
     # and <destination> can be all the source locations plus h (homes).
     # This raises a UserException if the move is illegal in any way.
     
-    def internal_move(self, move):
+    def internal_move(self, move, make_checkpoint):
         if len(move) != 2:
             raise UserException(f'Error, move "{move}" is not two characters')
 
@@ -308,23 +311,20 @@ class Board:
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, movable_cards)
+        self.record_move(src_column, dst_column, movable_cards, make_checkpoint)
 
         self.move_counter += 1
 
     # The public "move" interface that keeps a history and reports errors.
     def move(self, move, save_history=False):
-        if save_history:
-            self.snapshot()
-
         success = True
         try:
-            self.internal_move(move)
+            self.internal_move(move, save_history)
 
         except UserException as e:
             print(e)
             success = False
-            if save_history:
-                self.undo()
+            self.undo()
 
         return success
 
@@ -372,25 +372,22 @@ class Board:
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
         return (1 + empty_frees) * 2**empty_columns
 
-    def snapshot(self):
-        self.history.append(self.get_state())
+    # Record card movements between columns for undo purposes.
+    def record_move(self, src_column, dst_column, card_count, make_checkpoint):
+        record = dict(src_column=src_column, dst_column=dst_column, card_count=card_count, make_checkpoint=make_checkpoint)
+        self.history.append(record)
 
+    # Undo recorded moves back to the last checkpoint. Do nothing if there are no recorded moves.
     def undo(self):
-        if self.history:
-            self.restore_state(self.history.pop())
-
-    def get_state(self):
-        return copy.deepcopy(dict(frees=self.frees, 
-                                  homes=self.homes, 
-                                  cascades=self.cascades, 
-                                  move_counter=self.move_counter))
-
-    def restore_state(self, state):
-        self.frees = state['frees']
-        self.homes = state['homes']
-        self.cascades = state['cascades']
-        self.move_counter = state['move_counter']
-        self.make_column_maps()
+        while self.history:
+            record = self.history.pop()
+            src_column = record['src_column']
+            dst_column = record['dst_column']
+            card_count = record['card_count']
+            # Move the cards from where they landed up back to their original source column.
+            dst_column.move_top_cards_onto(src_column, card_count)
+            if record['make_checkpoint']:
+                break
 
     def print(self):
         sheet = PrinterSheet()
