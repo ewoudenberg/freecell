@@ -384,7 +384,8 @@ class Board:
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
-            # Move the cards from where they landed up back to their original source column.
+            # Reverse the move, taking the cards from where they landed up 
+            # and moving them back to their original source column.
             dst_column.move_top_cards_onto(src_column, card_count)
             if record['make_checkpoint']:
                 break
