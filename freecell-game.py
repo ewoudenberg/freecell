@@ -40,7 +40,7 @@ Game features:
  o Plays a standard MS freecell game, using the standard 2 character move syntax:
      <source><destination> where source is "1-9", "a-d" and destination adds "h" for home.
  o The character '#' when used as a destination indicates the first available freecell.
- o Use the single character "u" to undo a move.
+ o Use the single character "u" to undo a move and "r" to redo a previously undone move.
  o The game logs all user moves to the file "moves.log". These can be played back with the
    option "-F moves.log".
 ''')
@@ -174,8 +174,19 @@ def play(seed, moves):
         movesLog.write(move+'\n')
 
         if move == 'u':
-            board.undo()
-            board.print()
+            success = board.undo()
+            if not success:
+                print('Nothing to undo')
+            else:
+                board.print()
+            continue
+
+        if move == 'r':
+            success = board.redo()
+            if not success:
+                print('Nothing to redo')
+            else:
+                board.print()
             continue
 
         move_type = 'supplied' if is_supplied_move else 'manual'

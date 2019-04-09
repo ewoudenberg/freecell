@@ -253,6 +253,7 @@ class Board:
 
         self.move_counter = 0
         self.history = []
+        self.redos = []
         self.printer = printer
         self.ignore_dependencies = ignore_dependencies
 
@@ -374,13 +375,16 @@ class Board:
 
     # Record card movements between columns for undo purposes.
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
+        self.redos = [] # Any proper moves wipe out the possibility of a redo.
         record = dict(src_column=src_column, dst_column=dst_column, card_count=card_count, make_checkpoint=make_checkpoint)
         self.history.append(record)
 
     # Undo recorded moves back to the last checkpoint. Do nothing if there are no recorded moves.
     def undo(self):
+        success = bool(self.history)
         while self.history:
             record = self.history.pop()
+            self.redos.append(record)
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
@@ -389,6 +393,21 @@ class Board:
             dst_column.move_top_cards_onto(src_column, card_count)
             if record['make_checkpoint']:
                 break
+        return success
+
+    def redo(self):
+        success = bool(self.redos)
+        while self.redos:
+            record = self.redos.pop()
+            self.history.append(record)
+            src_column = record['src_column']
+            dst_column = record['dst_column']
+            card_count = record['card_count']
+            # Repleat a move which was on our undone history list.
+            src_column.move_top_cards_onto(dst_column, card_count)
+            if record['make_checkpoint']:
+                break
+        return success
 
     def print(self):
         sheet = PrinterSheet()
