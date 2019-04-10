@@ -126,11 +126,6 @@ class Column(list):
         self.__dict__.update(type_configurations[type])
 
     def add_card(self, card):
-        if not self.can_accept_card(card):
-            raise GameException(f'Column.add_card botch: {card} cannot be added to {self}')
-        self.append(card)
-
-    def add_card_from_dealer(self, card):
         self.append(card)
 
     def get_remaining_room(self):
@@ -204,12 +199,6 @@ class Column(list):
         self[-card_count:] = []
         return cards
 
-    # Used by undo; move cards from ourself onto another column
-    def move_top_cards_onto(self, dst_column, card_count):
-        cards = self.remove_top_cards(card_count)
-        for card in cards:
-            dst_column.add_card_from_dealer(card)
-
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_on_top()}'
     
@@ -260,7 +249,7 @@ class Board:
         # Go round-robin, placing cards from the shuffled deck in each column of the cascades.
         deck = GetShuffledDeck(seed)
         for i, card in enumerate(deck):
-            self.cascades[i % len(self.cascades)].add_card_from_dealer(card)
+            self.cascades[i % len(self.cascades)].add_card(card)
 
     def is_empty(self):
         columns_in_use = sum(1 for i in self.frees + self.cascades if i)
@@ -390,7 +379,7 @@ class Board:
             card_count = record['card_count']
             # Reverse the move, taking the cards from where they landed up 
             # and moving them back to their original source column.
-            dst_column.move_top_cards_onto(src_column, card_count)
+            src_column.add_cards_from_column(dst_column, card_count)
             if record['make_checkpoint']:
                 break
         return success
@@ -403,8 +392,8 @@ class Board:
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
-            # Repleat a move which was on our undone history list.
-            src_column.move_top_cards_onto(dst_column, card_count)
+            # Repeat a move which was on our undone history list.
+            dst_column.add_cards_from_column(src_column, card_count)
             if record['make_checkpoint']:
                 break
         return success
