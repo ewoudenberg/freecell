@@ -57,19 +57,25 @@ def GetShuffledDeck(seed):
         deck[idx] = deck[-1]
         deck.pop()
 
+# A Linear Congreential Generator using parameters from MS Visual/Quick C/C++
+# https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use
 # This is intended to be an MS compiler runtime compatible version of rand.
 
 class Random:
+    modulus=2**31
+    multiplier=214013
+    increment=2531011
+
     def __init__(self, seed):
         self.test()
-        self.state = seed
+        self.seed = seed
 
     def random(self):
-        self.state = ((214013 * self.state) + 2531011) % 2147483648 # mod 2^31
-        return self.state // 65536
+        self.seed = ((Random.multiplier * self.seed) + Random.increment) % Random.modulus
+        return self.seed // 65536
 
     def test(self):
-        self.state = 1
+        self.seed = 1
         first5 = [self.random() for i in range(5)]
         if first5 != [41, 18467, 6334, 26500, 19169]:
             print('Caution! Random number generator FAILS to match MS compiler runtime')
