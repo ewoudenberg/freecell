@@ -57,7 +57,7 @@ def GetShuffledDeck(seed):
         deck[idx] = deck[-1]
         deck.pop()
 
-# A Linear Congreential Generator using parameters from MS Visual/Quick C/C++
+# A Linear Congruential Generator using parameters from MS Visual/Quick C/C++
 # https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use
 # This is intended to be an MS compiler runtime compatible version of rand.
 
