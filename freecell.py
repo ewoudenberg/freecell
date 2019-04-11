@@ -138,12 +138,6 @@ class Column(list):
     def get_remaining_room(self):
         return self.max_length - len(self)
 
-    # Remove cards from the source column and add them to ourself.
-    def add_cards_from_column(self, src_column, card_count):
-        source_cards = src_column.remove_top_cards(card_count)
-        for card in source_cards:
-            self.add_card(card)
-
     # Can the given card be legally added to this columm?
     def can_accept_card(self, new_card):
         if self.get_remaining_room() == 0:
@@ -198,6 +192,12 @@ class Column(list):
     def peek_card_on_top(self):
         if len(self):
             return self[-1]
+
+    # Remove cards from the source column and add them to ourself.
+    def add_cards_from_column(self, src_column, card_count):
+        source_cards = src_column.remove_top_cards(card_count)
+        for card in source_cards:
+            self.add_card(card)
 
     def remove_top_cards(self, card_count):
         if card_count < 1:
