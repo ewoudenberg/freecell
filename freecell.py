@@ -62,18 +62,18 @@ def GetShuffledDeck(seed):
 # This is intended to be an MS compiler runtime compatible version of rand.
 
 class Random:
-    modulus = 2**31
-    multiplier = 214013
-    increment = 2531011
-    output_shift = 16 # Extracts the output bitfield (bits 16-31 of the seed).
+    Modulus = 2**31
+    Multiplier = 214013
+    Increment = 2531011
+    Output_shift = 16 # Extracts the output bitfield (bits 16-31 of the seed).
 
     def __init__(self, seed):
         self.test()
         self.seed = seed
 
     def random(self):
-        self.seed = ((Random.multiplier * self.seed) + Random.increment) % Random.modulus
-        return self.seed >> Random.output_shift
+        self.seed = ((Random.Multiplier * self.seed) + Random.Increment) % Random.Modulus
+        return self.seed >> Random.Output_shift
 
     def test(self):
         self.seed = 1
