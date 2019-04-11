@@ -156,15 +156,15 @@ class Column(list):
 
     # Can some cards from the given column be added to this column, given the amount
     # of movement room?
-    def can_accept_column(self, src_column, movement_room):
-        return self.get_column_move_size(src_column, movement_room) != 0
+    def can_accept_column(self, src_column, board_movement_room):
+        return self.get_column_move_size(src_column, board_movement_room) != 0
 
     # Find a legal move from the src column into ours and report
     # the number of cards it involves. Return 0 if there isn't one.
-    def get_column_move_size(self, src_column, movement_room):
+    def get_column_move_size(self, src_column, board_movement_room):
         src_cards = src_column.peek_movable_cards()
         src_length = len(src_cards)
-        max_length = min(src_length, movement_room, self.get_remaining_room())
+        max_length = min(src_length, board_movement_room, self.get_remaining_room())
 
         # Scan the source cards for a card we can accept, trying
         # the largest run of cards first since moves to an empty column 
@@ -294,8 +294,8 @@ class Board:
         if dst_column is None:
             raise UserException(f'No such destination {dst}')
 
-        movement_room = self.get_movement_room(dst_column)
-        movable_cards = dst_column.get_column_move_size(src_column, movement_room)
+        board_movement_room = self.get_board_movement_room(dst_column)
+        movable_cards = dst_column.get_column_move_size(src_column, board_movement_room)
 
         if movable_cards == 0:
             raise UserException(f'Illegal move {move}')
@@ -338,8 +338,8 @@ class Board:
     def get_possible_moves(self):
         for src_column in self.src_columns.values():
             for dst_column in self.dst_columns.values():
-                movement_room = self.get_movement_room(dst_column)
-                if dst_column.can_accept_column(src_column, movement_room):
+                board_movement_room = self.get_board_movement_room(dst_column)
+                if dst_column.can_accept_column(src_column, board_movement_room):
                     yield src_column.as_a_move_location + dst_column.as_a_move_location
 
     # Is there no card on the board that could follow this card in a tableau?
@@ -357,14 +357,14 @@ class Board:
     # The number of cards that can be moved at one time is given by:
     # (1 + number of empty freecells) * 2 ^ (number of empty columns)
     # (The destination column is excluded from the empty column count)
-    def get_movement_room(self, dst_column):
+    def get_board_movement_room(self, dst_column):
         empty_frees = sum(1 for i in self.frees if not i)
         empty_columns = sum(1 for i in self.cascades if not i and i.location != dst_column.location)
         return (1 + empty_frees) * 2**empty_columns
 
     # Record card movements between columns for undo purposes.
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
-        self.redos = [] # Any proper moves wipe out the possibility of a redo.
+        self.redos = [] # Any user move will cancel redos until the next undo.
         record = dict(src_column=src_column, dst_column=dst_column, card_count=card_count, make_checkpoint=make_checkpoint)
         self.history.append(record)
 
@@ -374,8 +374,8 @@ class Board:
     def redo(self):
         return self.undo_redo(self.redos, self.history, 'redo')
 
-    # Move through the undo/redo stacks until the next checkpoint, 
-    # undoing or replaying old moves.
+    # Move through the undo/redo stacks undoing moves (or undoing undos)
+    # until the next checkpoint.
     def undo_redo(self, from_do, to_do, direction):
         success = bool(from_do)
         while from_do:

@@ -146,6 +146,11 @@ def freecell():
     else:
         play(Opts.game, moves)
 
+# The central game-play UI loop.
+# Plays one game by instantiating a board and feeding moves to it.
+# Moves are read the supplied list or user input.
+# The user commands (undo/redo) are processed here.
+
 def play(seed, moves):
     movesLog = open('moves.log', 'w')
     printer = TTY() if Opts.tty else LinePrinter() 
