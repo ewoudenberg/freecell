@@ -372,7 +372,11 @@ class Board:
     # Record card movements between columns for undo purposes.
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
         self.redos = [] # Any user move will cancel redos until the next undo.
-        record = dict(src_column=src_column, dst_column=dst_column, card_count=card_count, make_checkpoint=make_checkpoint)
+        record = dict(src_column=src_column, 
+                      dst_column=dst_column, 
+                      card_count=card_count, 
+                      make_checkpoint=make_checkpoint,
+                      move_counter=self.move_counter)
         self.undos.append(record)
 
     def undo(self):
@@ -391,11 +395,13 @@ class Board:
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
+            self.move_counter = record['move_counter']
  
             if direction == 'undo':
                 # Reverse the move, taking the cards from where they landed up 
                 # and moving them back to their original source column.
                 src_column.add_cards_from_column(dst_column, card_count)
+                # When undoing, we stop after we've made a checkpointed move
                 ready_to_stop = record['make_checkpoint']
             else:
                 # Repeat a move which was on our undone history list.
