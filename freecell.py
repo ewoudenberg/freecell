@@ -248,7 +248,7 @@ class Board:
         self.dst_columns = {i.location: i for i in self.cascades + self.frees + self.homes}
 
         self.move_counter = 0
-        self.history = []
+        self.undos = []
         self.redos = []
         self.printer = printer
         self.ignore_dependencies = ignore_dependencies
@@ -373,13 +373,13 @@ class Board:
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
         self.redos = [] # Any user move will cancel redos until the next undo.
         record = dict(src_column=src_column, dst_column=dst_column, card_count=card_count, make_checkpoint=make_checkpoint)
-        self.history.append(record)
+        self.undos.append(record)
 
     def undo(self):
-        return self.undo_redo(self.history, self.redos, 'undo')
+        return self.undo_redo(self.undos, self.redos, 'undo')
 
     def redo(self):
-        return self.undo_redo(self.redos, self.history, 'redo')
+        return self.undo_redo(self.redos, self.undos, 'redo')
 
     # Move through the undo/redo stacks undoing moves (or undoing undos)
     # until the next checkpoint.
@@ -391,16 +391,19 @@ class Board:
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
-
+ 
             if direction == 'undo':
                 # Reverse the move, taking the cards from where they landed up 
                 # and moving them back to their original source column.
                 src_column.add_cards_from_column(dst_column, card_count)
+                ready_to_stop = record['make_checkpoint']
             else:
                 # Repeat a move which was on our undone history list.
                 dst_column.add_cards_from_column(src_column, card_count)
+                # When redoing, we stop when the *next* record is a checkpoint
+                ready_to_stop = from_do and from_do[-1]['make_checkpoint']
 
-            if record['make_checkpoint']:
+            if ready_to_stop:
                 break
         return success
 
