@@ -302,12 +302,14 @@ class Board:
             raise UserException(f'No such destination {dst}')
 
         board_movement_room = self.get_board_movement_room(dst_column)
+
         movable_cards = dst_column.get_column_move_size(src_column, board_movement_room)
 
         if movable_cards == 0:
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, movable_cards)
+        
         self.record_move(src_column, dst_column, movable_cards, make_checkpoint)
 
         self.move_counter += 1
