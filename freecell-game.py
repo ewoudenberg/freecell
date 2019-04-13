@@ -146,6 +146,12 @@ def freecell():
     else:
         play(Opts.game, moves)
 
+def pretty_print(printer, doing, board, move, at_checkpoint):
+    move_type = 'user' if at_checkpoint else 'auto'
+    color = ansi.fg.yellow if at_checkpoint else ansi.fg.red
+    printer.print_header(f'{color}{doing} # {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
+    board.print()
+
 # The central game-play UI loop.
 # Plays one game by instantiating a board and feeding moves to it.
 # Moves are read the supplied list or user input.
@@ -173,32 +179,34 @@ def play(seed, moves):
             printer.flush()
             if Opts.possible_moves:
                 print_possible_moves(board)
-            print('Your move? ', end='')
+            print(f'Your #{board.move_counter} move? ', end='')
             move = input()
 
         movesLog.write(move+'\n')
 
+        if move == '':
+            board.print()
+            continue
+            
         if move == 'u':
-            success = board.undo()
+            success = board.undo(lambda board, move, at_checkpoint: 
+                                    pretty_print(printer, 'UNDO', board, move, at_checkpoint))
             if not success:
                 print('Nothing to undo')
-            else:
-                board.print()
             continue
 
         if move == 'r':
-            success = board.redo()
+            success = board.redo(lambda board, move, at_checkpoint: 
+                                    pretty_print(printer, 'REDO', board, move, at_checkpoint))
             if not success:
                 print('Nothing to redo')
-            else:
-                board.print()
             continue
 
         move_type = 'supplied' if is_supplied_move else 'manual'
         color = ansi.fg.yellow if is_supplied_move else ansi.fg.green
         printer.print_header(f'{color}# {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
 
-        valid = board.move(move, save_history=not is_supplied_move)
+        valid = board.move(move, make_checkpoint=not is_supplied_move)
         if not valid:
             # If a supplied move is invalid, bail out.
             if is_supplied_move:

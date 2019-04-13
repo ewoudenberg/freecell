@@ -313,15 +313,14 @@ class Board:
         self.move_counter += 1
 
     # The public "move" interface that keeps a history and reports errors.
-    def move(self, move, save_history=False):
+    def move(self, move, make_checkpoint=False):
         success = True
         try:
-            self.internal_move(move, save_history)
+            self.internal_move(move, make_checkpoint)
 
         except UserException as e:
             print(e)
             success = False
-            self.undo()
 
         return success
 
@@ -379,38 +378,46 @@ class Board:
                       move_counter=self.move_counter)
         self.undos.append(record)
 
-    def undo(self):
-        return self.undo_redo(self.undos, self.redos, 'undo')
+    def undo(self, printer=None):
+        return self.undo_redo(self.undos, self.redos, 'undo', printer)
 
-    def redo(self):
-        return self.undo_redo(self.redos, self.undos, 'redo')
+    def redo(self, printer=None):
+        return self.undo_redo(self.redos, self.undos, 'redo', printer)
 
     # Move through the undo/redo stacks undoing moves (or undoing undos)
     # until the next checkpoint.
-    def undo_redo(self, from_do, to_do, direction):
+    def undo_redo(self, from_do, to_do, direction, printer):
         success = bool(from_do)
-        while from_do:
+        stop = False
+        while from_do and not stop:
             record = from_do.pop()
             to_do.append(record)
             src_column = record['src_column']
             dst_column = record['dst_column']
             card_count = record['card_count']
+            check_point = record['make_checkpoint']
             self.move_counter = record['move_counter']
  
             if direction == 'undo':
-                # Reverse the move, taking the cards from where they landed up 
-                # and moving them back to their original source column.
+                # Put the dst_column cards back on the src_column
                 src_column.add_cards_from_column(dst_column, card_count)
-                # When undoing, we stop after we've made a checkpointed move
-                ready_to_stop = record['make_checkpoint']
-            else:
-                # Repeat a move which was on our undone history list.
-                dst_column.add_cards_from_column(src_column, card_count)
-                # When redoing, we stop when the *next* record is a checkpoint
-                ready_to_stop = from_do and from_do[-1]['make_checkpoint']
+                # When undoing, we stop after we've undone a checkpointed (user) move
+                stop = check_point
 
-            if ready_to_stop:
-                break
+            elif direction == 'redo':
+                # Repeat a move that was on our undone history list.
+                dst_column.add_cards_from_column(src_column, card_count)
+                # When redoing, we stop before redo-ing another user move.
+                stop = from_do and from_do[-1]['make_checkpoint']
+
+            if printer:
+                move = src_column.as_a_move_location + dst_column.as_a_move_location
+                printer(self, move=move, at_checkpoint=check_point)
+
+        if direction == 'redo':
+            # The checkpoint is made before the counter is incremented.
+            self.move_counter += 1
+
         return success
 
     def print(self):
