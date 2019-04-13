@@ -112,11 +112,17 @@ class Options:
 
 Opts = Options()
 
-def print_possible_moves(board):
-    print('Available moves: ', end='')
-    for i in board.get_possible_moves():
-        print(f'{i} ', end='')
-    print()
+def main():
+    if Opts.help:
+        usage()
+
+    try:
+        freecell()
+    except GameException as e:
+        print(f'*** Internal Game Engine Error: {e} ***')
+        usage()
+
+# The top of the Freecell Game program
 
 def freecell():
     moves = []
@@ -145,6 +151,12 @@ def freecell():
 
     else:
         play(Opts.game, moves)
+
+def print_possible_moves(board):
+    print('Available moves: ', end='')
+    for i in board.get_possible_moves():
+        print(f'{i} ', end='')
+    print()
 
 def pretty_print(printer, doing, board, move, at_checkpoint):
     move_type = 'user' if at_checkpoint else 'auto'
@@ -187,7 +199,7 @@ def play(seed, moves):
         if move == '':
             board.print()
             continue
-            
+
         if move == 'u':
             success = board.undo(lambda board, move, at_checkpoint: 
                                     pretty_print(printer, 'UNDO', board, move, at_checkpoint))
@@ -230,15 +242,5 @@ def play(seed, moves):
     print(f'\n*** Completed Game #{seed} ***\n')
     return True        
         
-def main():
-    if Opts.help:
-        usage()
-
-    try:
-        freecell()
-    except GameException as e:
-        print(f'*** Internal Game Engine Error: {e} ***')
-        usage()
-
 if __name__ == '__main__':
     main()
