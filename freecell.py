@@ -379,14 +379,19 @@ class Board:
         self.undos.append(record)
 
     def undo(self, printer=None):
-        return self.undo_redo(self.undos, self.redos, 'undo', printer)
+        return self.undo_redo(is_undoing=True, printer=printer)
 
     def redo(self, printer=None):
-        return self.undo_redo(self.redos, self.undos, 'redo', printer)
+        return self.undo_redo(is_undoing=False, printer=printer)
 
     # Move through the undo/redo stacks undoing moves (or undoing undos)
     # until the next checkpoint.
-    def undo_redo(self, from_do, to_do, direction, printer):
+    def undo_redo(self, is_undoing, printer):
+        if is_undoing:
+            from_do, to_do = self.undos, self.redos
+        else:
+            from_do, to_do = self.redos, self.undos
+
         success = bool(from_do)
         stop = False
         while from_do and not stop:
@@ -398,13 +403,13 @@ class Board:
             check_point = record.make_checkpoint
             self.move_counter = record.move_counter
  
-            if direction == 'undo':
+            if is_undoing:
                 # Put the dst_column cards back on the src_column
                 src_column.add_cards_from_column(dst_column, card_count)
-                # When undoing, we stop after we've undone a checkpointed (user) move
+                # When is_undoing, we stop after we've undone a checkpointed (user) move
                 stop = check_point
 
-            elif direction == 'redo':
+            else:
                 # Repeat a move that was on our undone history list.
                 dst_column.add_cards_from_column(src_column, card_count)
                 # When redoing, we stop before redo-ing another user move.
@@ -414,7 +419,7 @@ class Board:
                 move = src_column.as_a_move_location + dst_column.as_a_move_location
                 printer(self, move=move, at_checkpoint=check_point)
 
-        if direction == 'redo':
+        if not is_undoing:
             # Correct for the fact that the checkpoint is made before the counter is incremented.
             self.move_counter += 1
 
