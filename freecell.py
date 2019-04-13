@@ -167,11 +167,12 @@ class Column(list):
         src_length = len(src_cards)
         max_length = min(src_length, board_movement_room, self.get_remaining_room())
 
-        # Scan the source cards for a card we can accept, trying
+        # Scan the source cards to find the move point, trying
         # the largest run of cards first since moves to an empty column 
         # can start from any card in a tableau.
         for run_length in range(max_length, 0, -1):
-            if self.can_accept_card(src_cards[-run_length]):
+            card_at_move_point = src_cards[-run_length]
+            if self.can_accept_card(card_at_move_point):
                 return run_length
         return 0
 
@@ -309,7 +310,7 @@ class Board:
             raise UserException(f'Illegal move {move}')
     
         dst_column.add_cards_from_column(src_column, movable_cards)
-        
+
         self.record_move(src_column, dst_column, movable_cards, make_checkpoint)
 
         self.move_counter += 1
