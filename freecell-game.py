@@ -226,7 +226,9 @@ def play(seed, moves):
         else:
             print_title(printer, board.move_counter, 'manual-move', 'green', move)
 
-        valid = board.move(move, make_checkpoint=not is_supplied_move)
+        # Ask the board to execute our move and mark it as an "undo-to" point.
+        valid = board.move(move, make_checkpoint=True)
+
         if not valid:
             # If a supplied move is invalid, bail out.
             if is_supplied_move:
