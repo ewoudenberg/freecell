@@ -158,11 +158,18 @@ def print_possible_moves(board):
         print(f'{i} ', end='')
     print()
 
+# For undo/redo printing
 def pretty_print(printer, doing, board, move, at_checkpoint):
-    move_type = 'user' if at_checkpoint else 'auto'
-    color = ansi.fg.yellow if at_checkpoint else ansi.fg.red
-    printer.print_header(f'{color}{doing} # {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
+    if at_checkpoint:
+        print_title(printer, board.move_counter, 'user-move', 'yellow', move, prefix=doing)
+    else:
+        print_title(printer, board.move_counter, 'auto-move', 'red', move, prefix=doing)
     board.print()
+
+def print_title(printer, counter, move_type, color, move, prefix=''):
+    text_color = ansi.fg.__dict__[color]
+    printer.print_header(f'{text_color}{prefix} # {counter}. {move_type}: {move}{ansi.reset}')
+
 
 # The central game-play UI loop.
 # Plays one game by instantiating a board and feeding moves to it.
@@ -202,21 +209,22 @@ def play(seed, moves):
 
         if move == 'u':
             success = board.undo(lambda board, move, at_checkpoint: 
-                                    pretty_print(printer, 'UNDO', board, move, at_checkpoint))
+                                   pretty_print(printer, 'UNDO', board, move, at_checkpoint))
             if not success:
                 print('Nothing to undo')
             continue
 
         if move == 'r':
             success = board.redo(lambda board, move, at_checkpoint: 
-                                    pretty_print(printer, 'REDO', board, move, at_checkpoint))
+                                   pretty_print(printer, 'REDO', board, move, at_checkpoint))
             if not success:
                 print('Nothing to redo')
             continue
 
-        move_type = 'supplied' if is_supplied_move else 'manual'
-        color = ansi.fg.yellow if is_supplied_move else ansi.fg.green
-        printer.print_header(f'{color}# {board.move_counter}. {move_type}-move: {move}{ansi.reset}')
+        if is_supplied_move:
+            print_title(printer, board.move_counter, 'supplied-move', 'yellow', move)
+        else:
+            print_title(printer, board.move_counter, 'manual-move', 'green', move)
 
         valid = board.move(move, make_checkpoint=not is_supplied_move)
         if not valid:
@@ -233,7 +241,7 @@ def play(seed, moves):
 
         if not Opts.no_automoves:
             for move in board.automatic_moves():
-                printer.print_header(f'{ansi.fg.red}# {board.move_counter}. auto-move: {move}{ansi.reset}')
+                print_title(printer, board.move_counter, 'auto-move', 'red', move)
                 board.move(move)
                 board.print()
 

@@ -209,7 +209,7 @@ class Column(list):
     def __repr__(self):
         return f'{self.type}({self.location}), length={len(self)} top={self.peek_card_on_top()}'
     
-# A ColumnGroup is a unifying container for columns. There are 3 of 
+# A ColumnGroup is a unifying container for alike columns. There are 3 of 
 # them: one each for the cascades, the freecells and the foundations.
 # The constructor takes a list of columns.
 
@@ -412,7 +412,7 @@ class Board:
                 printer(self, move=move, at_checkpoint=check_point)
 
         if direction == 'redo':
-            # The checkpoint is made before the counter is incremented.
+            # Correct for the fact that the checkpoint is made before the counter is incremented.
             self.move_counter += 1
 
         return success
