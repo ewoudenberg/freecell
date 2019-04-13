@@ -1,5 +1,6 @@
 # Load the moves.txt file into a dictionary
 
+import re
 class Games(dict):
     default_file='fixed_moves.txt'
     def __init__(self, filename=default_file):
@@ -7,12 +8,13 @@ class Games(dict):
         moves = ''
         game = None
         for i in fd.readlines():
-            # Parse: #17768 Adrian Ettlinger 
-            if i.startswith('#'):
+            # Recognize a game header line, e.g. "#29596, longest at 53 moves"
+            game_no = re.search(r'#(\d*)', i)
+            if game_no:
                 if game is not None:
                     self[game] = moves.split()
                 moves = ''
-                game = int(i.split()[0][1:])
+                game = int(game_no.group(1))
             else:
                 moves += i
 
