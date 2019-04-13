@@ -375,7 +375,7 @@ class Board:
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
         self.redos = [] # Any user move will cancel redos until the next undo.
         record = Record(src_column=src_column, dst_column=dst_column, card_count=card_count, 
-                        make_checkpoint=make_checkpoint, move_counter=self.move_counter)
+                        checkpoint=make_checkpoint, move_counter=self.move_counter)
         self.undos.append(record)
 
     def undo(self, printer=None):
@@ -400,26 +400,26 @@ class Board:
             src_column = record.src_column
             dst_column = record.dst_column
             card_count = record.card_count
-            check_point = record.make_checkpoint
+            checkpoint = record.checkpoint
             self.move_counter = record.move_counter
  
             if is_undoing:
                 # Put the dst_column cards back on the src_column
                 src_column.add_cards_from_column(dst_column, card_count)
-                # When is_undoing, we stop after we've undone a checkpointed (user) move
-                stop = check_point
+                # When undoing, we stop after we've undone a checkpointed (user) move
+                stop = checkpoint
 
             else:
                 # Repeat a move that was on our undone history list.
                 dst_column.add_cards_from_column(src_column, card_count)
                 # When redoing, we stop before redo-ing another user move.
-                stop = from_do and from_do[-1].make_checkpoint
+                stop = from_do and from_do[-1].checkpoint
 
             if printer:
                 move = src_column.as_a_move_location + dst_column.as_a_move_location
-                printer(self, move=move, at_checkpoint=check_point)
+                printer(self, move=move, at_checkpoint=checkpoint)
 
-        if not is_undoing:
+        if success and not is_undoing:
             # Correct for the fact that the checkpoint is made before the counter is incremented.
             self.move_counter += 1
 
