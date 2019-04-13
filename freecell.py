@@ -371,11 +371,8 @@ class Board:
     # Record card movements between columns for undo purposes.
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
         self.redos = [] # Any user move will cancel redos until the next undo.
-        record = dict(src_column=src_column, 
-                      dst_column=dst_column, 
-                      card_count=card_count, 
-                      make_checkpoint=make_checkpoint,
-                      move_counter=self.move_counter)
+        record = Record(src_column=src_column, dst_column=dst_column, card_count=card_count, 
+                        make_checkpoint=make_checkpoint, move_counter=self.move_counter)
         self.undos.append(record)
 
     def undo(self, printer=None):
@@ -392,11 +389,11 @@ class Board:
         while from_do and not stop:
             record = from_do.pop()
             to_do.append(record)
-            src_column = record['src_column']
-            dst_column = record['dst_column']
-            card_count = record['card_count']
-            check_point = record['make_checkpoint']
-            self.move_counter = record['move_counter']
+            src_column = record.src_column
+            dst_column = record.dst_column
+            card_count = record.card_count
+            check_point = record.make_checkpoint
+            self.move_counter = record.move_counter
  
             if direction == 'undo':
                 # Put the dst_column cards back on the src_column
@@ -408,7 +405,7 @@ class Board:
                 # Repeat a move that was on our undone history list.
                 dst_column.add_cards_from_column(src_column, card_count)
                 # When redoing, we stop before redo-ing another user move.
-                stop = from_do and from_do[-1]['make_checkpoint']
+                stop = from_do and from_do[-1].make_checkpoint
 
             if printer:
                 move = src_column.as_a_move_location + dst_column.as_a_move_location
@@ -447,3 +444,8 @@ class Board:
         sheet.print()
 
         self.printer.print_sheet(sheet)
+
+class Record:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
