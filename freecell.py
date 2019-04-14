@@ -111,7 +111,7 @@ class Card:
         return f'{color_sequence}{self.rank}{self.glyph if glyph else self.suit} '
 
     def __repr__(self): # for debugging
-        return f'Card: suit={self.suit} ({self.glyph}) rank={self.rank}'
+        return f'Card: {self.rank}{self.glyph}'
     
 Infinite = float('Inf')
 
@@ -284,7 +284,7 @@ class Board:
     # and <destination> can be all the source locations plus h (homes).
     # This raises a UserException if the move is illegal in any way.
     
-    def internal_move(self, move, make_checkpoint):
+    def perform_move(self, move, make_checkpoint):
         if len(move) != 2:
             raise UserException(f'Error, move "{move}" is not two characters')
 
@@ -315,11 +315,11 @@ class Board:
 
         self.move_counter += 1
 
-    # The public "move" interface that keeps a history and reports errors.
+    # The public "move" interface that catches and reports user errors.
     def move(self, move, make_checkpoint=False):
         success = True
         try:
-            self.internal_move(move, make_checkpoint)
+            self.perform_move(move, make_checkpoint)
 
         except UserException as e:
             print(e)
@@ -373,10 +373,10 @@ class Board:
 
     # Record card movements between columns for undo purposes.
     def record_move(self, src_column, dst_column, card_count, make_checkpoint):
-        self.redos = [] # Any user move will cancel redos until the next undo.
         record = Record(src_column=src_column, dst_column=dst_column, card_count=card_count, 
                         checkpoint=make_checkpoint, move_counter=self.move_counter)
         self.undos.append(record)
+        self.redos = [] # When any move occurs it cancels the existing redos.
 
     def undo(self, printer=None):
         return self.undo_redo(is_undoing=True, printer=printer)
@@ -453,6 +453,7 @@ class Board:
 
         self.printer.print_sheet(sheet)
 
+# A record of one game board changed used by undo/redo
 class Record:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
