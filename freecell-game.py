@@ -53,7 +53,7 @@ class Options:
         self.freecells = 4
         self.cascades = 8
         self.play_back = False
-        first_game = list(Solved_Games.keys())[0]
+        first_game = (list(Solved_Games.keys()) or [1])[0]
         self.game = first_game
         self.input = None
         self.ignore_dependencies = False

@@ -384,7 +384,7 @@ class Board:
     def redo(self, printer=None):
         return self.undo_redo(is_undoing=False, printer=printer)
 
-    # Move through the undo/redo stacks undoing moves (or undoing undos)
+    # Move through the undo/redo records undoing moves (or undoing undos)
     # until the next checkpoint.
     def undo_redo(self, is_undoing, printer):
         if is_undoing:
