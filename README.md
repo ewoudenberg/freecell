@@ -2,6 +2,7 @@
 
 This implements the game of Freecell in Python3. It is a scrolling command line program. It allows players to input moves and prints the board out after every move. It was done as a programming exercise.
 
+```
 $ ./freecell-game.py 
 
 *** Game #1 ***
@@ -47,3 +48,4 @@ Game features:
  o Use the single character "u" to undo a move and "r" to redo a previously undone move. Use "q" to quit the game.
  o The game logs all user moves to the file "moves.log". These can be played back with the
    option "-F moves.log".
+```
