@@ -16,7 +16,7 @@ Solved_Games = Games()
 
 def usage():
     example_games = ', '.join(f'{i}' for i in list(Solved_Games.keys())[:20])
-    print(f'''\nusage: freecell.py [options]
+    print(f'''\nusage: {sys.argv[0]} [options]
 
 Generate MS compatible Freecell deals and play them.
 
